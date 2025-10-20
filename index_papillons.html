@@ -24,6 +24,7 @@
     #map {
       height: calc(100% - 180px);
       width: 100%;
+      background: white;
     }
 
     #papillons {
@@ -62,11 +63,15 @@
       background-color: #eef;
     }
 
+    /* Style du texte sans fond */
     .label-text {
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
       font-weight: bold;
       font-size: 14px;
-      color: black;
-      text-shadow: 0 0 3px white;
+      color: #000;
+      text-shadow: 0 0 2px white;
     }
   </style>
 </head>
@@ -98,7 +103,6 @@
   </div>
 
   <script>
-    // Initialisation de la carte
     const map = L.map("map").setView([48.5, 6.5], 7);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -107,7 +111,7 @@
 
     let selectedPapillon = null;
 
-    // Sélection du papillon actif
+    // Sélection du papillon
     document.querySelectorAll(".papillon").forEach((el) => {
       el.addEventListener("click", () => {
         document.querySelectorAll(".papillon").forEach((p) => p.classList.remove("active"));
@@ -116,22 +120,38 @@
           id: el.getAttribute("data-id"),
           patternUrl: el.getAttribute("data-pattern"),
         };
+        map.getContainer().style.cursor = "url('https://cdn-icons-png.flaticon.com/512/616/616408.png') 16 16, crosshair";
       });
     });
+
+    // Fonction pour créer un motif image
+    function createPattern(url) {
+      const pattern = new L.Pattern({ width: 60, height: 60 });
+      const image = new L.PatternImage({
+        pattern,
+        x: 0,
+        y: 0,
+        width: 60,
+        height: 60,
+        href: url,
+      });
+      pattern.addShape(image);
+      return pattern;
+    }
 
     // Chargement du GeoJSON
     fetch("epci_grand-est.geojson")
       .then((res) => res.json())
       .then((data) => {
         const layer = L.geoJSON(data, {
-          style: () => ({
+          style: {
             color: "#333",
             weight: 1,
-            fillColor: "#dcdcdc",
-            fillOpacity: 0.7,
-          }),
+            fillColor: "#ffffff",
+            fillOpacity: 1.0,
+          },
           onEachFeature: (feature, layer) => {
-            // Affiche le numéro "couleur" au centre
+            // Affiche le numéro sans fond
             if (feature.properties && feature.properties.couleur) {
               layer.bindTooltip(feature.properties.couleur.toString(), {
                 permanent: true,
@@ -140,31 +160,15 @@
               });
             }
 
-            // Clic sur une zone
+            // Interaction clic
             layer.on("click", () => {
               if (!selectedPapillon) return;
 
               const id = feature.properties.couleur;
               if (id == selectedPapillon.id) {
-                const pattern = new L.Pattern({
-                  width: 40,
-                  height: 40,
-                });
-                const image = new L.PatternImage({
-                  pattern: pattern,
-                  x: 0,
-                  y: 0,
-                  width: 40,
-                  height: 40,
-                  href: selectedPapillon.patternUrl,
-                });
-                pattern.addShape(image);
+                const pattern = createPattern(selectedPapillon.patternUrl);
                 pattern.addTo(map);
-
-                layer.setStyle({
-                  fillPattern: pattern,
-                  fillOpacity: 1,
-                });
+                layer.setStyle({ fillPattern: pattern, fillOpacity: 1 });
               }
             });
           },
