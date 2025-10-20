@@ -3,169 +3,127 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Coloriage EPCI - Papillons (Grand Est)</title>
+  <title>Carte des Papillons du Grand Est</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif}
     #map{height:calc(100% - 140px);border-bottom:4px solid #222}
-    .toolbar{display:flex;gap:12px;padding:8px;background:#f7f7f7;align-items:center}
-    .thumbs{display:flex;gap:8px;align-items:flex-start;overflow:hidden;width:100%}
-    .papillon{flex:1;text-align:center;cursor:pointer}
-    .papillon img{width:100%;height:80px;object-fit:cover;border:2px solid transparent}
+    footer{height:140px;padding:10px;background:#fff;display:flex;align-items:center;justify-content:center}
+    .thumbs{display:flex;gap:10px;width:90%;justify-content:space-around}
+    .papillon{text-align:center;cursor:pointer;flex:1}
+    .papillon img{width:100%;height:100px;object-fit:cover;border:3px solid transparent;border-radius:8px}
     .papillon.selected img{border-color:#007bff}
-    .papillon input{display:none}
-    .instructions{font-size:13px;color:#333}
-    #uploadGeo{margin-left:10px}
-    .antennesToggle{margin-left:10px}
-    footer{height:120px;padding:10px;background:#fff}
-    .name{font-weight:600;margin-bottom:4px}
-    .status{font-size:13px;color:#666}
-    .control-row{display:flex;gap:8px;align-items:center}
+    .papillon .name{margin-top:4px;font-weight:600}
+    .toolbar{display:flex;align-items:center;gap:10px;padding:8px;background:#f7f7f7}
   </style>
 </head>
 <body>
   <div class="toolbar">
-    <div class="instructions">
-      <div><strong>1)</strong> Charge ton GeoJSON des EPCI (champ "couleur" avec valeurs 1-5).</div>
-      <div><strong>2)</strong> Charge 5 images (une par espèce). Cliquez sur une vignette pour activer le pinceau.</div>
-    </div>
-    <div class="control-row">
-      <label class="btn">GeoJSON: <input id="uploadGeo" type="file" accept="application/geo+json,application/json,.geojson"></label>
-      <button id="resetStyle">Réinitialiser styles</button>
-      <label class="antennesToggle"><input id="toggleAntennes" type="checkbox" checked> Afficher antennes</label>
-    </div>
-    <div style="margin-left:auto" class="status">Sélection: <span id="sel">aucune</span></div>
+    <button id="resetStyle">Réinitialiser</button>
+    <label><input id="toggleAntennes" type="checkbox" checked> Afficher antennes</label>
+    <div style="margin-left:auto">Sélection : <span id="sel">aucune</span></div>
   </div>
 
   <div id="map"></div>
 
   <footer>
-    <div style="display:flex;gap:12px;align-items:flex-start;height:100%">
-      <div style="width:220px">
-        <div style="font-weight:700;margin-bottom:6px">Pinceau</div>
-        <div style="font-size:13px;color:#444;margin-bottom:6px">Clique sur une vignette puis clique sur les EPCI avec le même numéro pour remplir avec le motif.</div>
-      </div>
-      <div class="thumbs" id="thumbs">
-        <!-- 5 slots -->
-      </div>
-    </div>
+    <div class="thumbs" id="thumbs"></div>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // --- setup map
-    const map = L.map('map').setView([48.7, 6.2], 8); // centre approximatif Grand Est
+    const map = L.map('map').setView([48.7, 6.2], 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom: 19, attribution: '© OSM'}).addTo(map);
 
     let geojsonLayer = null;
-    const patterns = {}; // 1..5 -> dataURL
-    let selected = null; // number 1..5 when brush active
+    let selected = null;
+    const species = [
+      {id:1, name:'Aglais io', file:'Aglais_io'},
+      {id:2, name:'Aglais urticae', file:'aglais_urticae'},
+      {id:3, name:'Gonepteryx rhamni', file:'Gonepteryx_rhamni'},
+      {id:4, name:'Vanessa atalanta', file:'Vanessa_atalanta'},
+      {id:5, name:'Vanessa cardui', file:'Vanessa_cardui'}
+    ];
 
-    // create 5 thumbnail slots
+    // création des vignettes
     const thumbs = document.getElementById('thumbs');
-    for(let i=1;i<=5;i++){
-      const wrapper = document.createElement('div'); wrapper.className='papillon'; wrapper.dataset.index=i;
-      const name = document.createElement('div'); name.className='name'; name.textContent=`Espèce ${i}`;
-      const img = document.createElement('img'); img.alt=`papillon ${i}`; img.src='data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="300" height="150"><rect width="100%" height="100%" fill="#ddd"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="18" fill="#666">Upload image ${i}</text></svg>`);
-      const input = document.createElement('input'); input.type='file'; input.accept='image/*';
-      input.addEventListener('change', evt=>{
-        const f = evt.target.files[0]; if(!f) return; const reader = new FileReader();
-        reader.onload = e => { patterns[i]=e.target.result; img.src = e.target.result; createSVGPattern(i, e.target.result); };
-        reader.readAsDataURL(f);
+    species.forEach(sp => {
+      const div = document.createElement('div');
+      div.className = 'papillon';
+      div.dataset.id = sp.id;
+      div.innerHTML = `<img src="images_papillons/${sp.file}.jpg" alt="${sp.name}"><div class='name'>${sp.name}</div>`;
+      div.addEventListener('click', ()=>{
+        document.querySelectorAll('.papillon').forEach(p=>p.classList.remove('selected'));
+        if(selected === sp.id){ selected = null; document.getElementById('sel').textContent='aucune'; return; }
+        selected = sp.id;
+        div.classList.add('selected');
+        document.getElementById('sel').textContent = sp.name;
       });
-      wrapper.appendChild(name); wrapper.appendChild(img); wrapper.appendChild(input);
-      wrapper.addEventListener('click', ()=>{
-        // open file picker if ctrl key pressed
-        if(event.ctrlKey || event.metaKey){ input.click(); return; }
-        document.querySelectorAll('.papillon').forEach(n=>n.classList.remove('selected'));
-        if(selected===i){ selected=null; wrapper.classList.remove('selected'); document.getElementById('sel').textContent='aucune'; }
-        else{ selected=i; wrapper.classList.add('selected'); document.getElementById('sel').textContent=`${i}`; }
-      });
-      thumbs.appendChild(wrapper);
-    }
+      thumbs.appendChild(div);
+    });
 
-    // helper: create <pattern> element inside map's SVG defs
-    function createSVGPattern(id, dataUrl){
-      // wait until map has an svg root
+    // chargement GeoJSON automatiquement depuis la racine
+    fetch('epci_grand-est.geojson')
+      .then(r => r.json())
+      .then(gj => {
+        geojsonLayer = L.geoJSON(gj, {
+          style: feature => ({color:'#222', weight:1, fillColor:'#d9d9d9', fillOpacity:1}),
+          onEachFeature: (feature, layer) => {
+            layer.on('click', ()=>onPolygonClick(feature, layer));
+          }
+        }).addTo(map);
+        map.fitBounds(geojsonLayer.getBounds(), {padding:[10,10]});
+        // créer les patterns
+        species.forEach(sp => {
+          createSVGPattern(sp.id, `images_papillons/patterns/${sp.file}.jpg`);
+        });
+      });
+
+    function createSVGPattern(id, url){
       const svg = map.getPanes().overlayPane.querySelector('svg');
-      if(!svg){ setTimeout(()=>createSVGPattern(id,dataUrl),50); return; }
+      if(!svg){ setTimeout(()=>createSVGPattern(id,url),50); return; }
       let defs = svg.querySelector('defs'); if(!defs){ defs = document.createElementNS('http://www.w3.org/2000/svg','defs'); svg.insertBefore(defs, svg.firstChild); }
-      // remove old if exists
-      const existing = defs.querySelector(`#pattern-pap-${id}`);
+      const existing = defs.querySelector(`#pattern-${id}`);
       if(existing) existing.remove();
       const pattern = document.createElementNS('http://www.w3.org/2000/svg','pattern');
-      pattern.setAttribute('id', `pattern-pap-${id}`);
+      pattern.setAttribute('id', `pattern-${id}`);
       pattern.setAttribute('patternUnits','userSpaceOnUse');
-      pattern.setAttribute('width','60'); pattern.setAttribute('height','60');
+      pattern.setAttribute('width','80'); pattern.setAttribute('height','80');
       const image = document.createElementNS('http://www.w3.org/2000/svg','image');
-      image.setAttribute('href', dataUrl);
-      image.setAttribute('width','60'); image.setAttribute('height','60');
+      image.setAttribute('href', url);
+      image.setAttribute('width','80'); image.setAttribute('height','80');
       pattern.appendChild(image);
       defs.appendChild(pattern);
     }
 
-    // load geojson from user file
-    document.getElementById('uploadGeo').addEventListener('change', e=>{
-      const f = e.target.files[0]; if(!f) return;
-      const r = new FileReader(); r.onload = ev => {
-        try{
-          const gj = JSON.parse(ev.target.result);
-          if(geojsonLayer){ map.removeLayer(geojsonLayer); geojsonLayer=null; }
-          geojsonLayer = L.geoJSON(gj,{
-            style: feature => ({color:'#222', weight:1, fillColor:'#cfcfcf', fillOpacity:1}),
-            onEachFeature: (feature, layer) => {
-              layer.on('click', ev2 => onPolygonClick(feature, layer));
-              // attach reference to element for later
-              layer.options.originalStyle = layer.options; 
-            }
-          }).addTo(map);
-          map.fitBounds(geojsonLayer.getBounds(), {padding:[10,10]});
-          // ensure patterns exist in SVG defs
-          Object.keys(patterns).forEach(k=>createSVGPattern(k, patterns[k]));
-        }catch(err){ alert('Erreur lecture GeoJSON: '+err.message); }
-      }; r.readAsText(f);
-    });
-
     function onPolygonClick(feature, layer){
-      // if no brush selected, do nothing
       if(!selected) return;
-      const prop = feature.properties || {};
-      const c = Number(prop.couleur);
-      if(c !== selected){ // not the right species
-        // optional: give quick feedback
-        flashLayer(layer, '#ff6666');
-        return;
+      const c = Number(feature.properties.couleur);
+      if(c !== selected){ flashLayer(layer, '#ff6666'); return; }
+      const path = layer._path;
+      if(path){
+        path.setAttribute('fill', `url(#pattern-${selected})`);
+        path.setAttribute('fill-opacity', '1');
       }
-      // success: apply pattern fill
-      const svgPath = layer._path; if(!svgPath) return;
-      // ensure pattern exists
-      if(!document.querySelector(`#pattern-pap-${selected}`)){
-        if(patterns[selected]) createSVGPattern(selected, patterns[selected]);
-        else{ alert('Pas d'image pour cette espèce. Charge-la en ctrl+click sur la vignette.'); return; }
-      }
-      svgPath.setAttribute('fill', `url(#pattern-pap-${selected})`);
-      svgPath.setAttribute('fill-opacity', '1');
-      svgPath.setAttribute('stroke','#111');
-      svgPath.setAttribute('stroke-width','1');
     }
 
     function flashLayer(layer, color){
-      const p = layer._path; if(!p) return; const old = p.getAttribute('fill')||''; p.setAttribute('fill', color); setTimeout(()=>{ p.setAttribute('fill', old); },350);
+      const p = layer._path; if(!p) return; const old = p.getAttribute('fill')||''; p.setAttribute('fill', color); setTimeout(()=>{ p.setAttribute('fill', old); },300);
     }
 
-    // reset styles
     document.getElementById('resetStyle').addEventListener('click', ()=>{
-      if(!geojsonLayer) return; geojsonLayer.eachLayer(l=>{ const p = l._path; if(p){ p.setAttribute('fill','#cfcfcf'); p.setAttribute('fill-opacity','1'); } });
+      if(!geojsonLayer) return;
+      geojsonLayer.eachLayer(l => {
+        const p = l._path; if(p){ p.setAttribute('fill','#d9d9d9'); }
+      });
     });
 
-    // antennas: draw two curved lines as svg on top of map
+    // antennes
     let antennesGroup = null;
     function drawAntennes(){
       const svg = map.getPanes().overlayPane.querySelector('svg'); if(!svg) return;
-      // remove old
-      if(antennesGroup){ antennesGroup.remove(); antennesGroup=null; }
-      const g = document.createElementNS('http://www.w3.org/2000/svg','g'); g.setAttribute('class','antennes');
-      // pick anchor latlngs relative to map center
+      if(antennesGroup){ antennesGroup.remove(); }
+      antennesGroup = document.createElementNS('http://www.w3.org/2000/svg','g');
       const center = map.getCenter();
       const anchor1 = L.latLng(center.lat + 1.6, center.lng - 0.4);
       const anchor2 = L.latLng(center.lat + 1.6, center.lng + 0.4);
@@ -173,9 +131,7 @@
       const p1 = map.latLngToLayerPoint(anchor1);
       const p2 = map.latLngToLayerPoint(anchor2);
       const pt = map.latLngToLayerPoint(top);
-      function makePath(a,b,c){
-        return `M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`;
-      }
+      function makePath(a,b,c){return `M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`;}
       const path1 = document.createElementNS('http://www.w3.org/2000/svg','path');
       path1.setAttribute('d', makePath(p1, pt, {x: p1.x+10, y: p1.y-80}));
       path1.setAttribute('stroke','#111'); path1.setAttribute('stroke-width','3'); path1.setAttribute('fill','none');
@@ -184,24 +140,14 @@
       path2.setAttribute('d', makePath(p2, pt, {x: p2.x-10, y: p2.y-80}));
       path2.setAttribute('stroke','#111'); path2.setAttribute('stroke-width','3'); path2.setAttribute('fill','none');
       const knob2 = document.createElementNS('http://www.w3.org/2000/svg','circle'); knob2.setAttribute('cx', pt.x+22); knob2.setAttribute('cy', pt.y-6); knob2.setAttribute('r',8); knob2.setAttribute('fill','#fff'); knob2.setAttribute('stroke','#111');
-      g.appendChild(path1); g.appendChild(path2); g.appendChild(knob1); g.appendChild(knob2);
-      svg.appendChild(g); antennesGroup = g;
+      antennesGroup.appendChild(path1); antennesGroup.appendChild(path2); antennesGroup.appendChild(knob1); antennesGroup.appendChild(knob2);
+      svg.appendChild(antennesGroup);
     }
 
-    // redraw antennas on move/zoom
     map.on('moveend zoomend', ()=>{
-      if(document.getElementById('toggleAntennes').checked) drawAntennes(); else if(antennesGroup) { antennesGroup.remove(); antennesGroup=null; }
+      if(document.getElementById('toggleAntennes').checked) drawAntennes(); else if(antennesGroup) antennesGroup.remove();
     });
-    // initial
     setTimeout(()=>{ if(document.getElementById('toggleAntennes').checked) drawAntennes(); },300);
-    document.getElementById('toggleAntennes').addEventListener('change', ()=>{ if(document.getElementById('toggleAntennes').checked) drawAntennes(); else if(antennesGroup) { antennesGroup.remove(); antennesGroup=null; } });
-
-    // allow ctrl+click on thumb to open file picker
-    // (handled above)
-
-    // accessibility: if user wants to seed images via drag n drop entire set
-    // small helper to log
-    console.log('Page prête. Charge ton GeoJSON et tes 5 images. Ctrl+click une vignette pour la charger. Cliquez sur vignette pour activer le pinceau.');
   </script>
 </body>
 </html>
