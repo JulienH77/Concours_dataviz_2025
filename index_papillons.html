@@ -1,153 +1,175 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Carte des Papillons du Grand Est</title>
+
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Plugin Leaflet.pattern -->
+  <script src="https://unpkg.com/leaflet.pattern/dist/leaflet.pattern.min.js"></script>
+
   <style>
-    html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif}
-    #map{height:calc(100% - 140px);border-bottom:4px solid #222}
-    footer{height:140px;padding:10px;background:#fff;display:flex;align-items:center;justify-content:center}
-    .thumbs{display:flex;gap:10px;width:90%;justify-content:space-around}
-    .papillon{text-align:center;cursor:pointer;flex:1}
-    .papillon img{width:100%;height:100px;object-fit:cover;border:3px solid transparent;border-radius:8px}
-    .papillon.selected img{border-color:#007bff}
-    .papillon .name{margin-top:4px;font-weight:600}
-    .toolbar{display:flex;align-items:center;gap:10px;padding:8px;background:#f7f7f7}
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+
+    #map {
+      height: calc(100% - 180px);
+      width: 100%;
+    }
+
+    #papillons {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      height: 180px;
+      background: #f8f8f8;
+      border-top: 2px solid #ccc;
+      padding: 10px 0;
+    }
+
+    .papillon {
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      text-align: center;
+      border-radius: 10px;
+      padding: 5px 10px;
+    }
+
+    .papillon img {
+      height: 100px;
+      display: block;
+      margin: 5px auto;
+    }
+
+    .papillon-name {
+      font-style: italic;
+      font-size: 1.1em;
+      margin-bottom: 5px;
+    }
+
+    .papillon:hover, .papillon.active {
+      transform: scale(1.1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      background-color: #eef;
+    }
+
+    .label-text {
+      font-weight: bold;
+      font-size: 14px;
+      color: black;
+      text-shadow: 0 0 3px white;
+    }
   </style>
 </head>
 <body>
-  <div class="toolbar">
-    <button id="resetStyle">Réinitialiser</button>
-    <label><input id="toggleAntennes" type="checkbox" checked> Afficher antennes</label>
-    <div style="margin-left:auto">Sélection : <span id="sel">aucune</span></div>
-  </div>
 
   <div id="map"></div>
 
-  <footer>
-    <div class="thumbs" id="thumbs"></div>
-  </footer>
+  <div id="papillons">
+    <div class="papillon" data-id="1" data-pattern="images_papillons/pattern_AGLAIS_IO.png">
+      <div class="papillon-name"><i>Aglais io</i></div>
+      <img src="images_papillons/papillon_AGLAIS_IO.png" alt="Aglais io" />
+    </div>
+    <div class="papillon" data-id="2" data-pattern="images_papillons/pattern_AGLAIS_URTICAE.png">
+      <div class="papillon-name"><i>Aglais urticae</i></div>
+      <img src="images_papillons/papillon_AGLAIS_URTICAE.png" alt="Aglais urticae" />
+    </div>
+    <div class="papillon" data-id="3" data-pattern="images_papillons/pattern_GONEPTERYX_RHAMNI.png">
+      <div class="papillon-name"><i>Gonepteryx rhamni</i></div>
+      <img src="images_papillons/papillon_GONEPTERYX_RHAMNI.png" alt="Gonepteryx rhamni" />
+    </div>
+    <div class="papillon" data-id="4" data-pattern="images_papillons/pattern_VANESSA_ATALANTA.png">
+      <div class="papillon-name"><i>Vanessa atalanta</i></div>
+      <img src="images_papillons/papillon_VANESSA_ATALANTA.png" alt="Vanessa atalanta" />
+    </div>
+    <div class="papillon" data-id="5" data-pattern="images_papillons/pattern_VANESSA_CARDUI.png">
+      <div class="papillon-name"><i>Vanessa cardui</i></div>
+      <img src="images_papillons/papillon_VANESSA_CARDUI.png" alt="Vanessa cardui" />
+    </div>
+  </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([48.7, 6.2], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom: 19, attribution: '© OSM'}).addTo(map);
+    // Initialisation de la carte
+    const map = L.map("map").setView([48.5, 6.5], 7);
 
-    let geojsonLayer = null;
-    let selected = null;
-    const species = [
-      {id:1, name:'Aglais io', file:'Aglais_io'},
-      {id:2, name:'Aglais urticae', file:'aglais_urticae'},
-      {id:3, name:'Gonepteryx rhamni', file:'Gonepteryx_rhamni'},
-      {id:4, name:'Vanessa atalanta', file:'Vanessa_atalanta'},
-      {id:5, name:'Vanessa cardui', file:'Vanessa_cardui'}
-    ];
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
 
-    // création des vignettes
-    const thumbs = document.getElementById('thumbs');
-    species.forEach(sp => {
-      const div = document.createElement('div');
-      div.className = 'papillon';
-      div.dataset.id = sp.id;
-      div.innerHTML = `<img src="images_papillons/${sp.file}.jpg" alt="${sp.name}"><div class='name'>${sp.name}</div>`;
-      div.addEventListener('click', ()=>{
-        document.querySelectorAll('.papillon').forEach(p=>p.classList.remove('selected'));
-        if(selected === sp.id){ selected = null; document.getElementById('sel').textContent='aucune'; return; }
-        selected = sp.id;
-        div.classList.add('selected');
-        document.getElementById('sel').textContent = sp.name;
+    let selectedPapillon = null;
+
+    // Sélection du papillon actif
+    document.querySelectorAll(".papillon").forEach((el) => {
+      el.addEventListener("click", () => {
+        document.querySelectorAll(".papillon").forEach((p) => p.classList.remove("active"));
+        el.classList.add("active");
+        selectedPapillon = {
+          id: el.getAttribute("data-id"),
+          patternUrl: el.getAttribute("data-pattern"),
+        };
       });
-      thumbs.appendChild(div);
     });
 
-    // chargement GeoJSON automatiquement depuis la racine
-    fetch('epci_grand-est.geojson')
-      .then(r => r.json())
-      .then(gj => {
-        geojsonLayer = L.geoJSON(gj, {
-          style: feature => ({color:'#222', weight:1, fillColor:'#d9d9d9', fillOpacity:1}),
+    // Chargement du GeoJSON
+    fetch("epci_grand-est.geojson")
+      .then((res) => res.json())
+      .then((data) => {
+        const layer = L.geoJSON(data, {
+          style: () => ({
+            color: "#333",
+            weight: 1,
+            fillColor: "#dcdcdc",
+            fillOpacity: 0.7,
+          }),
           onEachFeature: (feature, layer) => {
-            layer.on('click', ()=>onPolygonClick(feature, layer));
-          }
+            // Affiche le numéro "couleur" au centre
+            if (feature.properties && feature.properties.couleur) {
+              layer.bindTooltip(feature.properties.couleur.toString(), {
+                permanent: true,
+                direction: "center",
+                className: "label-text",
+              });
+            }
+
+            // Clic sur une zone
+            layer.on("click", () => {
+              if (!selectedPapillon) return;
+
+              const id = feature.properties.couleur;
+              if (id == selectedPapillon.id) {
+                const pattern = new L.Pattern({
+                  width: 40,
+                  height: 40,
+                });
+                const image = new L.PatternImage({
+                  pattern: pattern,
+                  x: 0,
+                  y: 0,
+                  width: 40,
+                  height: 40,
+                  href: selectedPapillon.patternUrl,
+                });
+                pattern.addShape(image);
+                pattern.addTo(map);
+
+                layer.setStyle({
+                  fillPattern: pattern,
+                  fillOpacity: 1,
+                });
+              }
+            });
+          },
         }).addTo(map);
-        map.fitBounds(geojsonLayer.getBounds(), {padding:[10,10]});
-        // créer les patterns
-        species.forEach(sp => {
-          createSVGPattern(sp.id, `images_papillons/patterns/${sp.file}.jpg`);
-        });
       });
-
-    function createSVGPattern(id, url){
-      const svg = map.getPanes().overlayPane.querySelector('svg');
-      if(!svg){ setTimeout(()=>createSVGPattern(id,url),50); return; }
-      let defs = svg.querySelector('defs'); if(!defs){ defs = document.createElementNS('http://www.w3.org/2000/svg','defs'); svg.insertBefore(defs, svg.firstChild); }
-      const existing = defs.querySelector(`#pattern-${id}`);
-      if(existing) existing.remove();
-      const pattern = document.createElementNS('http://www.w3.org/2000/svg','pattern');
-      pattern.setAttribute('id', `pattern-${id}`);
-      pattern.setAttribute('patternUnits','userSpaceOnUse');
-      pattern.setAttribute('width','80'); pattern.setAttribute('height','80');
-      const image = document.createElementNS('http://www.w3.org/2000/svg','image');
-      image.setAttribute('href', url);
-      image.setAttribute('width','80'); image.setAttribute('height','80');
-      pattern.appendChild(image);
-      defs.appendChild(pattern);
-    }
-
-    function onPolygonClick(feature, layer){
-      if(!selected) return;
-      const c = Number(feature.properties.couleur);
-      if(c !== selected){ flashLayer(layer, '#ff6666'); return; }
-      const path = layer._path;
-      if(path){
-        path.setAttribute('fill', `url(#pattern-${selected})`);
-        path.setAttribute('fill-opacity', '1');
-      }
-    }
-
-    function flashLayer(layer, color){
-      const p = layer._path; if(!p) return; const old = p.getAttribute('fill')||''; p.setAttribute('fill', color); setTimeout(()=>{ p.setAttribute('fill', old); },300);
-    }
-
-    document.getElementById('resetStyle').addEventListener('click', ()=>{
-      if(!geojsonLayer) return;
-      geojsonLayer.eachLayer(l => {
-        const p = l._path; if(p){ p.setAttribute('fill','#d9d9d9'); }
-      });
-    });
-
-    // antennes
-    let antennesGroup = null;
-    function drawAntennes(){
-      const svg = map.getPanes().overlayPane.querySelector('svg'); if(!svg) return;
-      if(antennesGroup){ antennesGroup.remove(); }
-      antennesGroup = document.createElementNS('http://www.w3.org/2000/svg','g');
-      const center = map.getCenter();
-      const anchor1 = L.latLng(center.lat + 1.6, center.lng - 0.4);
-      const anchor2 = L.latLng(center.lat + 1.6, center.lng + 0.4);
-      const top = L.latLng(center.lat + 2.6, center.lng);
-      const p1 = map.latLngToLayerPoint(anchor1);
-      const p2 = map.latLngToLayerPoint(anchor2);
-      const pt = map.latLngToLayerPoint(top);
-      function makePath(a,b,c){return `M ${a.x} ${a.y} Q ${c.x} ${c.y} ${b.x} ${b.y}`;}
-      const path1 = document.createElementNS('http://www.w3.org/2000/svg','path');
-      path1.setAttribute('d', makePath(p1, pt, {x: p1.x+10, y: p1.y-80}));
-      path1.setAttribute('stroke','#111'); path1.setAttribute('stroke-width','3'); path1.setAttribute('fill','none');
-      const knob1 = document.createElementNS('http://www.w3.org/2000/svg','circle'); knob1.setAttribute('cx', pt.x); knob1.setAttribute('cy', pt.y-6); knob1.setAttribute('r',8); knob1.setAttribute('fill','#fff'); knob1.setAttribute('stroke','#111');
-      const path2 = document.createElementNS('http://www.w3.org/2000/svg','path');
-      path2.setAttribute('d', makePath(p2, pt, {x: p2.x-10, y: p2.y-80}));
-      path2.setAttribute('stroke','#111'); path2.setAttribute('stroke-width','3'); path2.setAttribute('fill','none');
-      const knob2 = document.createElementNS('http://www.w3.org/2000/svg','circle'); knob2.setAttribute('cx', pt.x+22); knob2.setAttribute('cy', pt.y-6); knob2.setAttribute('r',8); knob2.setAttribute('fill','#fff'); knob2.setAttribute('stroke','#111');
-      antennesGroup.appendChild(path1); antennesGroup.appendChild(path2); antennesGroup.appendChild(knob1); antennesGroup.appendChild(knob2);
-      svg.appendChild(antennesGroup);
-    }
-
-    map.on('moveend zoomend', ()=>{
-      if(document.getElementById('toggleAntennes').checked) drawAntennes(); else if(antennesGroup) antennesGroup.remove();
-    });
-    setTimeout(()=>{ if(document.getElementById('toggleAntennes').checked) drawAntennes(); },300);
   </script>
 </body>
 </html>
