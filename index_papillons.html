@@ -5,8 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Carte des Papillons du Grand Est</title>
 
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Plugin Leaflet.pattern -->
+  <script src="https://unpkg.com/leaflet.pattern/dist/leaflet.pattern.min.js"></script>
 
   <style>
     html, body {
@@ -15,7 +19,6 @@
       height: 100%;
       font-family: "Segoe UI", sans-serif;
       overflow: hidden;
-      background: white;
     }
 
     #map {
@@ -60,12 +63,15 @@
       background-color: #eef;
     }
 
-    .numero-label {
+    /* Style du texte sans fond */
+    .label-text {
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
       font-weight: bold;
       font-size: 14px;
-      color: black;
+      color: #000;
       text-shadow: 0 0 2px white;
-      white-space: nowrap;
     }
   </style>
 </head>
@@ -97,15 +103,15 @@
   </div>
 
   <script>
-    const map = L.map("map", {
-      zoomSnap: 0.5,
-      zoomControl: true,
-      attributionControl: false
-    }).setView([48.5, 6.5], 7);
+    const map = L.map("map").setView([48.5, 6.5], 7);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
+    }).addTo(map);
 
     let selectedPapillon = null;
 
-    // Sélection d’un papillon
+    // Sélection du papillon
     document.querySelectorAll(".papillon").forEach((el) => {
       el.addEventListener("click", () => {
         document.querySelectorAll(".papillon").forEach((p) => p.classList.remove("active"));
@@ -114,52 +120,30 @@
           id: el.getAttribute("data-id"),
           patternUrl: el.getAttribute("data-pattern"),
         };
-        map.getContainer().style.cursor = "crosshair";
+        map.getContainer().style.cursor = "url('https://cdn-icons-png.flaticon.com/512/616/616408.png') 16 16, crosshair";
       });
     });
 
-    // Fonction pour créer un pattern SVG unique dans le DOM
-    function createSvgPattern(url, id) {
-      if (document.getElementById(id)) return;
-      const svgNS = "http://www.w3.org/2000/svg";
-      const svg = document.createElementNS(svgNS, "svg");
-      svg.setAttribute("width", 0);
-      svg.setAttribute("height", 0);
-
-      const defs = document.createElementNS(svgNS, "defs");
-      const pattern = document.createElementNS(svgNS, "pattern");
-      pattern.setAttribute("id", id);
-      pattern.setAttribute("patternUnits", "userSpaceOnUse");
-      pattern.setAttribute("width", 100);
-      pattern.setAttribute("height", 100);
-
-      const image = document.createElementNS(svgNS, "image");
-      image.setAttributeNS(null, "href", url);
-      image.setAttribute("width", 100);
-      image.setAttribute("height", 100);
-
-      pattern.appendChild(image);
-      defs.appendChild(pattern);
-      svg.appendChild(defs);
-      document.body.appendChild(svg);
-    }
-
-    // Calcule le centroïde approximatif d’un polygone
-    function getCentroid(coords) {
-      let latSum = 0, lngSum = 0, count = 0;
-      coords[0].forEach(c => {
-        latSum += c[1];
-        lngSum += c[0];
-        count++;
+    // Fonction pour créer un motif image
+    function createPattern(url) {
+      const pattern = new L.Pattern({ width: 60, height: 60 });
+      const image = new L.PatternImage({
+        pattern,
+        x: 0,
+        y: 0,
+        width: 60,
+        height: 60,
+        href: url,
       });
-      return [latSum / count, lngSum / count];
+      pattern.addShape(image);
+      return pattern;
     }
 
     // Chargement du GeoJSON
     fetch("epci_grand-est.geojson")
-      .then(res => res.json())
-      .then(data => {
-        const geoLayer = L.geoJSON(data, {
+      .then((res) => res.json())
+      .then((data) => {
+        const layer = L.geoJSON(data, {
           style: {
             color: "#333",
             weight: 1,
@@ -167,31 +151,28 @@
             fillOpacity: 1.0,
           },
           onEachFeature: (feature, layer) => {
-            // Place un label fixe (ne change pas avec le zoom)
-            const coords = feature.geometry.type === "Polygon"
-              ? getCentroid(feature.geometry.coordinates[0])
-              : getCentroid(feature.geometry.coordinates[0][0]);
-
-            const divIcon = L.divIcon({
-              html: `<div class="numero-label">${feature.properties.couleur}</div>`,
-              className: "",
-              iconSize: null,
-            });
-            L.marker([coords[0], coords[1]], { icon: divIcon, interactive: false }).addTo(map);
+            // Affiche le numéro sans fond
+            if (feature.properties && feature.properties.couleur) {
+              layer.bindTooltip(feature.properties.couleur.toString(), {
+                permanent: true,
+                direction: "center",
+                className: "label-text",
+              });
+            }
 
             // Interaction clic
             layer.on("click", () => {
               if (!selectedPapillon) return;
-              if (feature.properties.couleur == selectedPapillon.id) {
-                const patternId = `pattern_${selectedPapillon.id}`;
-                createSvgPattern(selectedPapillon.patternUrl, patternId);
-                layer._path.setAttribute("fill", `url(#${patternId})`);
+
+              const id = feature.properties.couleur;
+              if (id == selectedPapillon.id) {
+                const pattern = createPattern(selectedPapillon.patternUrl);
+                pattern.addTo(map);
+                layer.setStyle({ fillPattern: pattern, fillOpacity: 1 });
               }
             });
           },
         }).addTo(map);
-
-        map.fitBounds(geoLayer.getBounds());
       });
   </script>
 </body>
