@@ -10,6 +10,7 @@
     #svgContainer { height: 100%; background: #fff; }
     svg { width: 100%; height: 100%; }
     .epci { stroke: #333; stroke-width: 0.5; fill: #fff; }
+    .label { font-size: 12px; fill: #000; text-anchor: middle; }
   </style>
 </head>
 <body>
@@ -18,7 +19,7 @@
     // État global
     const svg = d3.select("#svg");
     const container = document.getElementById("svgContainer");
-    let selectedPapillonId = "3"; // ID du papillon sélectionné (par défaut : 3)
+    let selectedPapillonId = 3; // ID numérique du papillon sélectionné (par défaut : 3)
 
     // Dessine la carte
     function draw() {
@@ -43,7 +44,7 @@
           .attr("fill", "#fff")
           .attr("stroke", "#333")
           .on("click", function(event, d) {
-            const featNum = String(d.properties.couleur);
+            const featNum = d.properties.couleur; // Valeur numérique (ex: 3)
             console.log("Zone EPCI cliquée, couleur :", featNum);
             if (featNum === selectedPapillonId) {
               d3.select(this).attr("fill", "red"); // Coloration en rouge
