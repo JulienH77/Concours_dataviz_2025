@@ -17,7 +17,6 @@
       fill: rgba(0, 0, 255, 0.1);
       pointer-events: all;
     }
-    .epci.selected { fill: red !important; stroke: black !important; stroke-width: 2 !important; }
     .label { font-size: 12px; fill: #000; text-anchor: middle; pointer-events: none; }
   </style>
 </head>
@@ -49,18 +48,26 @@
     function ensurePattern(url, pid) {
       if (patternCreated.has(pid)) return;
       const defs = svg.append("defs");
-      defs.append("pattern")
+      const pattern = defs.append("pattern")
         .attr("id", pid)
         .attr("patternUnits", "objectBoundingBox")
         .attr("width", 1)
+        .attr("height", 1);
+
+      pattern.append("rect")
+        .attr("width", 1)
         .attr("height", 1)
-        .append("image")
+        .attr("fill", "pink"); // Fond rose pour vérifier que le motif est créé
+
+      pattern.append("image")
         .attr("href", url)
         .attr("width", 1)
         .attr("height", 1)
         .attr("preserveAspectRatio", "xMidYMid slice")
         .on("error", () => console.error(`Erreur de chargement de l'image: ${url}`));
+
       patternCreated.add(pid);
+      console.log(`Motif ${pid} créé avec succès.`);
     }
 
     // Charge le fichier GeoJSON et dessine la carte
@@ -95,7 +102,9 @@
           if (couleur === selectedPapillonId) {
             const pid = `pattern_${selectedPapillonId}`;
             d3.select(this)
-              .attr("fill", `url(#${pid})`);
+              .attr("fill", `url(#${pid})`)
+              .attr("stroke", "black")
+              .attr("stroke-width", 2);
             console.log(`Motif ${pid} appliqué !`);
           }
         });
