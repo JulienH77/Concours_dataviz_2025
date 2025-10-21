@@ -21,7 +21,6 @@
     #map {
       height: calc(100% - 180px);
       width: 100%;
-      background: white;
     }
 
     #papillons {
@@ -68,6 +67,7 @@
       font-size: 14px;
       color: #000;
       text-shadow: 0 0 2px white;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -99,13 +99,21 @@
   </div>
 
   <script>
-const map = L.map("map").setView([48.5, 6.5], 7); L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap contributors", }).addTo(map);
+    const map = L.map("map", {
+      zoomSnap: 0.5,
+      zoomControl: true,
+      attributionControl: false
+    }).setView([48.5, 6.5], 7);
 
+    // ✅ fond de carte OSM
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
 
-    
     let selectedPapillon = null;
 
-    // Sélection d’un papillon
+    // Sélection du papillon
     document.querySelectorAll(".papillon").forEach((el) => {
       el.addEventListener("click", () => {
         document.querySelectorAll(".papillon").forEach((p) => p.classList.remove("active"));
@@ -114,11 +122,11 @@ const map = L.map("map").setView([48.5, 6.5], 7); L.tileLayer("https://{s}.tile.
           id: el.getAttribute("data-id"),
           patternUrl: el.getAttribute("data-pattern"),
         };
-        map.getContainer().style.cursor = "crosshair";
+        map.getContainer().style.cursor = "url('https://cdn-icons-png.flaticon.com/512/616/616408.png') 16 16, crosshair";
       });
     });
 
-    // Crée un pattern SVG (si pas déjà créé)
+    // Création d'un pattern SVG réutilisable
     function createSvgPattern(url, id) {
       if (document.getElementById(id)) return;
       const svgNS = "http://www.w3.org/2000/svg";
@@ -144,7 +152,7 @@ const map = L.map("map").setView([48.5, 6.5], 7); L.tileLayer("https://{s}.tile.
       document.body.appendChild(svg);
     }
 
-    // Calcul du centroïde (approximatif)
+    // Calcul du centroïde (simple)
     function getCentroid(coords) {
       let latSum = 0, lngSum = 0, count = 0;
       coords[0].forEach(c => {
@@ -175,9 +183,11 @@ const map = L.map("map").setView([48.5, 6.5], 7); L.tileLayer("https://{s}.tile.
               const divIcon = L.divIcon({
                 html: `<div class="label-text">${feature.properties.couleur}</div>`,
                 className: "",
-                iconSize: null,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
               });
-              L.marker([coords[0], coords[1]], { icon: divIcon, interactive: false }).addTo(map);
+              const marker = L.marker([coords[0], coords[1]], { icon: divIcon, interactive: false });
+              marker.addTo(map);
             }
 
             layer.on("click", () => {
@@ -196,4 +206,3 @@ const map = L.map("map").setView([48.5, 6.5], 7); L.tileLayer("https://{s}.tile.
   </script>
 </body>
 </html>
-
