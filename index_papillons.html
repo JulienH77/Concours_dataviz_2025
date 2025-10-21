@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Papillons du Grand Est — Vue statique</title>
+<title>Papillons du Grand Est — Vue statique interactive</title>
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
@@ -19,7 +19,7 @@
 
   #svgContainer {
     flex: 1;
-    overflow: auto;
+    overflow: hidden;
     background: white;
   }
 
@@ -32,9 +32,10 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
-    height: 180px;
+    height: 140px; /* plus compact */
     border-top: 2px solid #ccc;
     background: #f8f8f8;
+    padding: 5px;
   }
 
   .papillon {
@@ -43,32 +44,59 @@
     border-radius: 10px;
     padding: 5px 10px;
     transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid transparent;
   }
 
-  .papillon:hover, .papillon.active {
-    transform: scale(1.1);
+  .papillon.active {
     background: #eef;
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    border-color: #66f;
   }
 
   .papillon img {
-    height: 100px;
+    height: 80px;
     display: block;
-    margin: 5px auto;
   }
 
   .papillon-name {
     font-style: italic;
     margin-bottom: 5px;
+    font-size: 1em;
+  }
+
+  .papillon-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .control-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    opacity: 0.6;
+    transition: 0.2s;
+  }
+
+  .control-btn:hover, .control-btn.active {
+    opacity: 1;
   }
 
   text.label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     fill: black;
     text-anchor: middle;
     dominant-baseline: middle;
     pointer-events: none;
+  }
+
+  .corps-layer {
+    pointer-events: none; /* pour ne pas bloquer les clics */
   }
 </style>
 </head>
@@ -80,24 +108,63 @@
 
 <div id="papillons">
   <div class="papillon" data-id="1" data-pattern="images_papillons/pattern_AGLAIS_IO.png">
-    <div class="papillon-name"><i>Aglais io</i></div>
-    <img src="images_papillons/papillon_AGLAIS_IO.png" alt="Aglais io">
+    <div>
+      <div class="papillon-name"><i>Aglais io</i></div>
+      <img src="images_papillons/papillon_AGLAIS_IO.png" alt="Aglais io">
+    </div>
+    <div class="papillon-controls">
+      <button class="control-btn brush">🖌️</button>
+      <button class="control-btn eye">👁️</button>
+      <button class="control-btn trash">🗑️</button>
+    </div>
   </div>
+
   <div class="papillon" data-id="2" data-pattern="images_papillons/pattern_AGLAIS_URTICAE.png">
-    <div class="papillon-name"><i>Aglais urticae</i></div>
-    <img src="images_papillons/papillon_AGLAIS_URTICAE.png" alt="Aglais urticae">
+    <div>
+      <div class="papillon-name"><i>Aglais urticae</i></div>
+      <img src="images_papillons/papillon_AGLAIS_URTICAE.png" alt="Aglais urticae">
+    </div>
+    <div class="papillon-controls">
+      <button class="control-btn brush">🖌️</button>
+      <button class="control-btn eye">👁️</button>
+      <button class="control-btn trash">🗑️</button>
+    </div>
   </div>
+
   <div class="papillon" data-id="3" data-pattern="images_papillons/pattern_GONEPTERYX_RHAMNI.png">
-    <div class="papillon-name"><i>Gonepteryx rhamni</i></div>
-    <img src="images_papillons/papillon_GONEPTERYX_RHAMNI.png" alt="Gonepteryx rhamni">
+    <div>
+      <div class="papillon-name"><i>Gonepteryx rhamni</i></div>
+      <img src="images_papillons/papillon_GONEPTERYX_RHAMNI.png" alt="Gonepteryx rhamni">
+    </div>
+    <div class="papillon-controls">
+      <button class="control-btn brush">🖌️</button>
+      <button class="control-btn eye">👁️</button>
+      <button class="control-btn trash">🗑️</button>
+    </div>
   </div>
+
   <div class="papillon" data-id="4" data-pattern="images_papillons/pattern_VANESSA_ATALANTA.png">
-    <div class="papillon-name"><i>Vanessa atalanta</i></div>
-    <img src="images_papillons/papillon_VANESSA_ATALANTA.png" alt="Vanessa atalanta">
+    <div>
+      <div class="papillon-name"><i>Vanessa atalanta</i></div>
+      <img src="images_papillons/papillon_VANESSA_ATALANTA.png" alt="Vanessa atalanta">
+    </div>
+    <div class="papillon-controls">
+      <button class="control-btn brush">🖌️</button>
+      <button class="control-btn eye">👁️</button>
+      <button class="control-btn trash">🗑️</button>
+    </div>
   </div>
+
   <div class="papillon" data-id="5" data-pattern="images_papillons/pattern_VANESSA_CARDUI.png">
-    <div class="papillon-name"><i>Vanessa cardui</i></div>
-    <img src="images_papillons/papillon_VANESSA_CARDUI.png" alt="Vanessa cardui">
+    <div>
+      <div class="papillon-name"><i>Vanessa cardui</i></div>
+      <img src="images_papillons/papillon_VANESSA_CARDUI.png" alt="Vanessa cardui">
+    </div>
+    <div class="papillon-controls">
+      <button class="control-btn brush">🖌️</button>
+      <button class="control-btn eye">👁️</button>
+      <button class="control-btn trash">🗑️</button>
+    </div>
   </div>
 </div>
 
@@ -106,8 +173,9 @@ const svg = d3.select("#map");
 const g = svg.append("g");
 
 let selectedPapillon = null;
+let painted = {}; // pour garder en mémoire les EPCI coloriés par papillon
 
-// Fonction de création d’un motif SVG à partir d’une image
+// Crée un motif SVG à partir d'une image
 function createPattern(url, id) {
   if (document.getElementById(id)) return;
   const defs = svg.append("defs");
@@ -123,16 +191,15 @@ function createPattern(url, id) {
     .attr("preserveAspectRatio", "xMidYMid slice");
 }
 
-// Charger le GeoJSON principal
+// Charger les deux GeoJSON
 Promise.all([
   d3.json("epci_grand-est.geojson"),
   d3.json("corps_papillon_epci.geojson")
 ]).then(([epci, corps]) => {
 
-  const projection = d3.geoMercator().fitSize([window.innerWidth, window.innerHeight - 180], epci);
+  const projection = d3.geoMercator().fitSize([window.innerWidth, window.innerHeight - 140], epci);
   const path = d3.geoPath().projection(projection);
 
-  // Polygones des EPCI
   const zones = g.selectAll("path.epci")
     .data(epci.features)
     .enter()
@@ -141,9 +208,25 @@ Promise.all([
     .attr("d", path)
     .attr("fill", "#ffffff")
     .attr("stroke", "#333")
-    .attr("stroke-width", 0.5);
+    .attr("stroke-width", 0.5)
+    .on("click", function(event, d) {
+      if (!selectedPapillon) return;
+      const papId = selectedPapillon.id;
+      const patternId = `pattern_${papId}`;
+      painted[papId] = painted[papId] || new Set();
 
-  // Labels au centre
+      const isPainted = painted[papId].has(d.properties.couleur);
+
+      if (isPainted) {
+        painted[papId].delete(d.properties.couleur);
+        d3.select(this).attr("fill", "#ffffff");
+      } else {
+        painted[papId].add(d.properties.couleur);
+        d3.select(this).attr("fill", `url(#${patternId})`);
+      }
+    });
+
+  // Labels
   g.selectAll("text.label")
     .data(epci.features)
     .enter()
@@ -153,33 +236,58 @@ Promise.all([
     .attr("y", d => path.centroid(d)[1])
     .text(d => d.properties.couleur);
 
-  // Couche noire semi-transparente au-dessus
+  // Couche noire par-dessus
   g.selectAll("path.corps")
     .data(corps.features)
     .enter()
     .append("path")
-    .attr("class", "corps")
+    .attr("class", "corps-layer")
     .attr("d", path)
-    .attr("fill", "rgba(0,0,0,0.7)")
-    .attr("stroke", "none");
+    .attr("fill", "rgba(0,0,0,0.7)");
 
-  // Interaction avec les papillons
-  document.querySelectorAll(".papillon").forEach(el => {
-    el.addEventListener("click", () => {
-      document.querySelectorAll(".papillon").forEach(p => p.classList.remove("active"));
-      el.classList.add("active");
-      selectedPapillon = {
-        id: el.getAttribute("data-id"),
-        patternUrl: el.getAttribute("data-pattern")
-      };
-      const patternId = `pattern_${selectedPapillon.id}`;
-      createPattern(selectedPapillon.patternUrl, patternId);
+  // Gestion des interactions du bandeau
+  document.querySelectorAll(".papillon").forEach(p => {
+    const id = p.getAttribute("data-id");
+    const patternUrl = p.getAttribute("data-pattern");
+    const brushBtn = p.querySelector(".brush");
+    const eyeBtn = p.querySelector(".eye");
+    const trashBtn = p.querySelector(".trash");
 
-      // Remplir les EPCI correspondants
-      zones.transition().duration(500)
-        .attr("fill", d => d.properties.couleur == selectedPapillon.id
-          ? `url(#${patternId})`
-          : "#ffffff");
+    createPattern(patternUrl, `pattern_${id}`);
+
+    // Sélection principale
+    p.addEventListener("click", () => {
+      document.querySelectorAll(".papillon").forEach(x => x.classList.remove("active"));
+      p.classList.add("active");
+      selectedPapillon = { id, patternUrl };
+    });
+
+    // Pinceau = active aussi
+    brushBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      document.querySelectorAll(".control-btn.brush").forEach(b => b.classList.remove("active"));
+      brushBtn.classList.add("active");
+      selectedPapillon = { id, patternUrl };
+    });
+
+    // Œil = masque / affiche les zones peintes
+    eyeBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      const visible = !eyeBtn.classList.contains("active");
+      eyeBtn.classList.toggle("active", visible);
+
+      zones.each(function(d) {
+        if (painted[id]?.has(d.properties.couleur)) {
+          d3.select(this).attr("fill", visible ? `url(#pattern_${id})` : "#ffffff");
+        }
+      });
+    });
+
+    // Poubelle = reset complet
+    trashBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      painted[id] = new Set();
+      zones.filter(d => d.properties.couleur == id).attr("fill", "#ffffff");
     });
   });
 });
