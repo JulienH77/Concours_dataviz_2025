@@ -8,8 +8,24 @@
   <style>
     html, body { height: 100%; margin: 0; }
     #map { width: 100%; height: 100%; background: #f0f0f0; }
-    .epci { stroke: #333; stroke-width: 0.5; fill: rgba(0, 0, 255, 0.1); pointer-events: all; }
-    .label { font-size: 12px; fill: #000; text-anchor: middle; pointer-events: none; }
+    .epci {
+      stroke: #333;
+      stroke-width: 0.5;
+      fill: rgba(0, 0, 255, 0.1);
+      pointer-events: all;
+      transition: fill 0.3s; /* Animation pour voir le changement */
+    }
+    .epci.selected {
+      fill: red !important;
+      stroke: black !important;
+      stroke-width: 2 !important;
+    }
+    .label {
+      font-size: 12px;
+      fill: #000;
+      text-anchor: middle;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -46,12 +62,13 @@
           if (!p) console.warn("Path invalide pour la feature:", d);
           return p;
         })
-        .attr("fill", "rgba(0, 0, 255, 0.1)") // Fond bleu transparent
+        .attr("fill", "rgba(0, 0, 255, 0.1)")
         .attr("stroke", "blue")
         .on("click", function(event, d) {
           console.log("Zone EPCI cliquée !", d.properties.couleur);
           if (d.properties.couleur === selectedPapillonId) {
             d3.select(this)
+              .classed("selected", true)  // Ajoute une classe CSS
               .attr("fill", "red")
               .attr("stroke", "black")
               .attr("stroke-width", 2);
