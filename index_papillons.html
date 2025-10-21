@@ -48,6 +48,7 @@
 <body>
   <div id="svgContainer"><svg id="svg"></svg></div>
   <div id="papillons">
+    <!-- Papillon 1 -->
     <div class="papillon" data-id="1" data-pattern="images_papillons/pattern_AGLAIS_IO.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_AGLAIS_IO.png" alt="Aglais io">
@@ -59,6 +60,7 @@
         <button class="control-btn trash" title="Reset">🗑️</button>
       </div>
     </div>
+    <!-- Papillon 2 -->
     <div class="papillon" data-id="2" data-pattern="images_papillons/pattern_AGLAIS_URTICAE.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_AGLAIS_URTICAE.png" alt="Aglais urticae">
@@ -70,6 +72,7 @@
         <button class="control-btn trash">🗑️</button>
       </div>
     </div>
+    <!-- Papillon 3 -->
     <div class="papillon" data-id="3" data-pattern="images_papillons/pattern_GONEPTERYX_RHAMNI.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_GONEPTERYX_RHAMNI.png" alt="Gonepteryx rhamni">
@@ -81,6 +84,7 @@
         <button class="control-btn trash">🗑️</button>
       </div>
     </div>
+    <!-- Papillon 4 -->
     <div class="papillon" data-id="4" data-pattern="images_papillons/pattern_VANESSA_ATALANTA.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_VANESSA_ATALANTA.png" alt="Vanessa atalanta">
@@ -92,6 +96,7 @@
         <button class="control-btn trash">🗑️</button>
       </div>
     </div>
+    <!-- Papillon 5 -->
     <div class="papillon" data-id="5" data-pattern="images_papillons/pattern_VANESSA_CARDUI.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_VANESSA_CARDUI.png" alt="Vanessa cardui">
@@ -115,6 +120,7 @@
     /* Crée un motif SVG pour un papillon donné */
     function ensurePattern(url, pid) {
       if (patternCreated.has(pid)) return;
+      console.log("Création du motif pour :", url, "avec ID :", pid); // Débogage
       const defs = svg.append("defs");
       defs.append("pattern")
         .attr("id", pid)
@@ -125,7 +131,10 @@
         .attr("href", url)
         .attr("width", 1)
         .attr("height", 1)
-        .attr("preserveAspectRatio", "xMidYMid slice");
+        .attr("preserveAspectRatio", "xMidYMid slice")
+        .on("error", function() {
+          console.error("Erreur de chargement de l'image :", url); // Débogage
+        });
       patternCreated.add(pid);
     }
 
@@ -161,7 +170,10 @@
           .attr("fill", "#ffffff")
           .attr("stroke", "#333")
           .on("click", function(event, d) {
-            if (!selectedPapillon) return;
+            if (!selectedPapillon) {
+              console.log("Aucun papillon sélectionné."); // Débogage
+              return;
+            }
             const papId = String(selectedPapillon.id);
             const featNum = String(d.properties.couleur);
             console.log("Papillon ID:", papId, "EPCI couleur:", featNum); // Débogage
@@ -171,11 +183,13 @@
               const pid = `pattern_${papId}`;
               ensurePattern(selectedPapillon.patternUrl, pid);
               d3.select(this).attr("fill", `url(#${pid})`);
+              console.log("Motif appliqué :", pid); // Débogage
             } else {
               // Flash rouge si non autorisé
               const node = d3.select(this);
               node.classed("flash-red", true);
               setTimeout(() => node.classed("flash-red", false), 1000);
+              console.log("Zone non autorisée pour ce papillon."); // Débogage
             }
           });
 
@@ -225,6 +239,7 @@
           document.querySelectorAll(".control-btn.brush").forEach(b => b.classList.remove("active"));
           brushBtn.classList.add("active");
           selectedPapillon = { id: String(id), patternUrl: patternUrl };
+          console.log("Papillon sélectionné :", selectedPapillon); // Débogage
         };
 
         // Bouton pinceau
@@ -235,6 +250,7 @@
           document.querySelectorAll(".control-btn.brush").forEach(b => b.classList.remove("active"));
           brushBtn.classList.add("active");
           selectedPapillon = { id: String(id), patternUrl: patternUrl };
+          console.log("Pinceau activé pour :", selectedPapillon); // Débogage
         };
 
         // Bouton œil : affiche/masque les zones colorées pour ce papillon
@@ -250,6 +266,7 @@
               node.attr("fill", show ? `url(#pattern_${id})` : "#ffffff");
             }
           });
+          console.log("Visibilité basculée pour le papillon :", id); // Débogage
         };
 
         // Bouton poubelle : réinitialise les zones colorées pour ce papillon
@@ -262,6 +279,7 @@
             }
           });
           eyeBtn.classList.remove("active");
+          console.log("Réinitialisation pour le papillon :", id); // Débogage
         };
       });
     }
