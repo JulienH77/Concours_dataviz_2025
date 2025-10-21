@@ -1,130 +1,56 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Papillons du Grand Est — Vue statique interactive</title>
-
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Papillons — Vue SVG (sans Leaflet)</title>
 <script src="https://d3js.org/d3.v7.min.js"></script>
-
 <style>
-  body {
-    font-family: "Segoe UI", sans-serif;
-    margin: 0;
-    background: #fff;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+  :root{--banner-h:120px}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,sans-serif}
+  #svgContainer{height:calc(100% - var(--banner-h));background:#fff;overflow:auto}
+  svg{width:100%;height:100%}
+  #papillons{
+    height:var(--banner-h);
+    display:flex;align-items:center;gap:16px;
+    padding:10px;border-top:1px solid #ddd;background:#fafafa;
+    justify-content:space-around;
   }
-
-  #svgContainer {
-    flex: 1;
-    overflow: hidden;
-    background: white;
-  }
-
-  svg {
-    width: 100%;
-    height: 100%;
-  }
-
-  #papillons {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    height: 140px; /* plus compact */
-    border-top: 2px solid #ccc;
-    background: #f8f8f8;
-    padding: 5px;
-  }
-
-  .papillon {
-    cursor: pointer;
-    text-align: center;
-    border-radius: 10px;
-    padding: 5px 10px;
-    transition: transform 0.3s, box-shadow 0.3s;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    border: 1px solid transparent;
-  }
-
-  .papillon.active {
-    background: #eef;
-    border-color: #66f;
-  }
-
-  .papillon img {
-    height: 80px;
-    display: block;
-  }
-
-  .papillon-name {
-    font-style: italic;
-    margin-bottom: 5px;
-    font-size: 1em;
-  }
-
-  .papillon-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .control-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-    opacity: 0.6;
-    transition: 0.2s;
-  }
-
-  .control-btn:hover, .control-btn.active {
-    opacity: 1;
-  }
-
-  text.label {
-    font-size: 11px;
-    font-weight: bold;
-    fill: black;
-    text-anchor: middle;
-    dominant-baseline: middle;
-    pointer-events: none;
-  }
-
-  .corps-layer {
-    pointer-events: none; /* pour ne pas bloquer les clics */
-  }
+  .papillon{display:flex;gap:10px;align-items:center;padding:6px;border-radius:8px;border:1px solid transparent;cursor:pointer}
+  .papillon.active{background:#eef;border-color:#77a;}
+  .pap-img{width:72px;height:72px;object-fit:cover;border-radius:6px}
+  .pap-label{font-style:italic;font-size:14px}
+  .pap-controls{display:flex;flex-direction:column;gap:6px}
+  .control-btn{background:transparent;border:0;font-size:18px;cursor:pointer;opacity:0.75}
+  .control-btn.active{opacity:1}
+  .control-btn:hover{opacity:1}
+  text.label{font-size:12px;font-weight:700;fill:#000;pointer-events:none;text-anchor:middle;dominant-baseline:middle}
+  .epci{stroke:#333;stroke-width:0.5;fill:#fff}
+  .corps-layer{fill:rgba(0,0,0,0.7);pointer-events:none}
 </style>
 </head>
 <body>
 
-<div id="svgContainer">
-  <svg id="map"></svg>
-</div>
+<div id="svgContainer"><svg id="svg"></svg></div>
 
 <div id="papillons">
+  <!-- structure papillons : change si besoin -->
   <div class="papillon" data-id="1" data-pattern="images_papillons/pattern_AGLAIS_IO.png">
+    <img class="pap-img" src="images_papillons/papillon_AGLAIS_IO.png" alt="Aglais io">
     <div>
-      <div class="papillon-name"><i>Aglais io</i></div>
-      <img src="images_papillons/papillon_AGLAIS_IO.png" alt="Aglais io">
+      <div class="pap-label"><i>Aglais io</i></div>
     </div>
-    <div class="papillon-controls">
-      <button class="control-btn brush">🖌️</button>
-      <button class="control-btn eye">👁️</button>
-      <button class="control-btn trash">🗑️</button>
+    <div class="pap-controls">
+      <button class="control-btn brush" title="Pinceau">🖌️</button>
+      <button class="control-btn eye" title="Montrer/Masquer">👁️</button>
+      <button class="control-btn trash" title="Reset">🗑️</button>
     </div>
   </div>
 
   <div class="papillon" data-id="2" data-pattern="images_papillons/pattern_AGLAIS_URTICAE.png">
-    <div>
-      <div class="papillon-name"><i>Aglais urticae</i></div>
-      <img src="images_papillons/papillon_AGLAIS_URTICAE.png" alt="Aglais urticae">
-    </div>
-    <div class="papillon-controls">
+    <img class="pap-img" src="images_papillons/papillon_AGLAIS_URTICAE.png" alt="Aglais urticae">
+    <div><div class="pap-label"><i>Aglais urticae</i></div></div>
+    <div class="pap-controls">
       <button class="control-btn brush">🖌️</button>
       <button class="control-btn eye">👁️</button>
       <button class="control-btn trash">🗑️</button>
@@ -132,11 +58,9 @@
   </div>
 
   <div class="papillon" data-id="3" data-pattern="images_papillons/pattern_GONEPTERYX_RHAMNI.png">
-    <div>
-      <div class="papillon-name"><i>Gonepteryx rhamni</i></div>
-      <img src="images_papillons/papillon_GONEPTERYX_RHAMNI.png" alt="Gonepteryx rhamni">
-    </div>
-    <div class="papillon-controls">
+    <img class="pap-img" src="images_papillons/papillon_GONEPTERYX_RHAMNI.png" alt="Gonepteryx rhamni">
+    <div><div class="pap-label"><i>Gonepteryx rhamni</i></div></div>
+    <div class="pap-controls">
       <button class="control-btn brush">🖌️</button>
       <button class="control-btn eye">👁️</button>
       <button class="control-btn trash">🗑️</button>
@@ -144,11 +68,9 @@
   </div>
 
   <div class="papillon" data-id="4" data-pattern="images_papillons/pattern_VANESSA_ATALANTA.png">
-    <div>
-      <div class="papillon-name"><i>Vanessa atalanta</i></div>
-      <img src="images_papillons/papillon_VANESSA_ATALANTA.png" alt="Vanessa atalanta">
-    </div>
-    <div class="papillon-controls">
+    <img class="pap-img" src="images_papillons/papillon_VANESSA_ATALANTA.png" alt="Vanessa atalanta">
+    <div><div class="pap-label"><i>Vanessa atalanta</i></div></div>
+    <div class="pap-controls">
       <button class="control-btn brush">🖌️</button>
       <button class="control-btn eye">👁️</button>
       <button class="control-btn trash">🗑️</button>
@@ -156,11 +78,9 @@
   </div>
 
   <div class="papillon" data-id="5" data-pattern="images_papillons/pattern_VANESSA_CARDUI.png">
-    <div>
-      <div class="papillon-name"><i>Vanessa cardui</i></div>
-      <img src="images_papillons/papillon_VANESSA_CARDUI.png" alt="Vanessa cardui">
-    </div>
-    <div class="papillon-controls">
+    <img class="pap-img" src="images_papillons/papillon_VANESSA_CARDUI.png" alt="Vanessa cardui">
+    <div><div class="pap-label"><i>Vanessa cardui</i></div></div>
+    <div class="pap-controls">
       <button class="control-btn brush">🖌️</button>
       <button class="control-btn eye">👁️</button>
       <button class="control-btn trash">🗑️</button>
@@ -169,128 +89,188 @@
 </div>
 
 <script>
-const svg = d3.select("#map");
+/* --- Variables d'état --- */
+const svg = d3.select("#svg");
+const width = Math.max(window.innerWidth, 800);
+const height = Math.max(window.innerHeight - 120, 400);
+svg.attr("viewBox", `0 0 ${width} ${height}`);
+
 const g = svg.append("g");
+let selectedPapillon = null;               // {id, patternUrl}
+const painted = {};                        // painted[papId] = Set(featureIndex)
+const patternIdsCreated = new Set();
 
-let selectedPapillon = null;
-let painted = {}; // pour garder en mémoire les EPCI coloriés par papillon
-
-// Crée un motif SVG à partir d'une image
-function createPattern(url, id) {
-  if (document.getElementById(id)) return;
+/* --- util: créer pattern SVG (objectBoundingBox) qui couvre toute la géométrie --- */
+function createPatternURLImageAsPattern(url, pid) {
+  if (patternIdsCreated.has(pid)) return;
+  // patternUnits objectBoundingBox : image set to 1x1 covers whole bbox
   const defs = svg.append("defs");
-  defs.append("pattern")
-    .attr("id", id)
+  const pattern = defs.append("pattern")
+    .attr("id", pid)
     .attr("patternUnits", "objectBoundingBox")
     .attr("width", 1)
-    .attr("height", 1)
-    .append("image")
+    .attr("height", 1);
+
+  // use image with relative size 1x1 (works with modern browsers)
+  pattern.append("image")
     .attr("href", url)
-    .attr("width", 100)
-    .attr("height", 100)
+    .attr("width", 1)
+    .attr("height", 1)
     .attr("preserveAspectRatio", "xMidYMid slice");
+
+  patternIdsCreated.add(pid);
 }
 
-// Charger les deux GeoJSON
+/* --- charge les deux GeoJSON et dessine --- */
 Promise.all([
   d3.json("epci_grand-est.geojson"),
   d3.json("corps_papillon_epci.geojson")
 ]).then(([epci, corps]) => {
 
-  const projection = d3.geoMercator().fitSize([window.innerWidth, window.innerHeight - 140], epci);
-  const path = d3.geoPath().projection(projection);
+  // projection & path : on adapte l'échelle pour la taille de SVG
+  const projection = d3.geoMercator();
+  const path = d3.geoPath(projection);
 
+  // fit : calc extent of features then set scale/translate to fit our width/height
+  const bounds = d3.geoBounds(epci);
+  const b0 = bounds[0], b1 = bounds[1];
+  const bbox = [b0[0], b0[1], b1[0], b1[1]]; // [minX,minY,maxX,maxY]
+  const geoWidth = bbox[2] - bbox[0], geoHeight = bbox[3] - bbox[1];
+  const scale = Math.min(width / (geoWidth || 1) * 0.9, height / (geoHeight || 1) * 0.9);
+  const center = [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2];
+  projection.scale( scale ).translate([width/2, height/2]).center(center);
+
+  // bind features and give each a unique index
+  epci.features.forEach((f,i)=> f._idx = i);
+
+  // draw EPCI base layer
   const zones = g.selectAll("path.epci")
     .data(epci.features)
     .enter()
     .append("path")
-    .attr("class", "epci")
+    .attr("class","epci")
     .attr("d", path)
     .attr("fill", "#ffffff")
-    .attr("stroke", "#333")
-    .attr("stroke-width", 0.5)
-    .on("click", function(event, d) {
+    .attr("stroke","#333")
+    .attr("data-idx", d => d._idx)
+    .on("click", function(event, d){
+      // click doit vérifier si selectedPapillon est défini
       if (!selectedPapillon) return;
       const papId = selectedPapillon.id;
-      const patternId = `pattern_${papId}`;
-      painted[papId] = painted[papId] || new Set();
-
-      const isPainted = painted[papId].has(d.properties.couleur);
-
-      if (isPainted) {
-        painted[papId].delete(d.properties.couleur);
-        d3.select(this).attr("fill", "#ffffff");
+      const featureNum = String(d.properties.couleur);
+      // only allow painting when the EPCI couleur equals papillon id
+      if (featureNum === String(papId)) {
+        // paint: add this feature index to painted set for papId
+        painted[papId] = painted[papId] || new Set();
+        painted[papId].add(d._idx);
+        // apply pattern fill
+        const pid = `pattern_${papId}`;
+        createPatternURLImageAsPattern(selectedPapillon.patternUrl, pid);
+        d3.select(this).attr("fill", `url(#${pid})`);
       } else {
-        painted[papId].add(d.properties.couleur);
-        d3.select(this).attr("fill", `url(#${patternId})`);
+        // wrong number -> flash red outline / fill briefly
+        const node = d3.select(this);
+        const old = node.attr("fill");
+        node.transition().duration(80).attr("fill","#ffbdbd")
+          .transition().duration(800).attr("fill", old);
       }
     });
 
-  // Labels
-  g.selectAll("text.label")
+  // labels centered in geometry
+  const labels = g.selectAll("text.label")
     .data(epci.features)
     .enter()
     .append("text")
-    .attr("class", "label")
+    .attr("class","label")
     .attr("x", d => path.centroid(d)[0])
     .attr("y", d => path.centroid(d)[1])
     .text(d => d.properties.couleur);
 
-  // Couche noire par-dessus
+  // overlay corps_papillon_epci drawn on top, but pointer-events none so clicks go through
   g.selectAll("path.corps")
     .data(corps.features)
     .enter()
     .append("path")
-    .attr("class", "corps-layer")
+    .attr("class","corps-layer")
     .attr("d", path)
-    .attr("fill", "rgba(0,0,0,0.7)");
+    .attr("fill","rgba(0,0,0,0.7)")
+    .attr("stroke","none")
+    .style("pointer-events","none"); // important: laisser cliquer en dessous
 
-  // Gestion des interactions du bandeau
+  /* --- interactions UI (bandeau) --- */
   document.querySelectorAll(".papillon").forEach(p => {
-    const id = p.getAttribute("data-id");
-    const patternUrl = p.getAttribute("data-pattern");
+    const id = p.dataset.id;
+    const patternUrl = p.dataset.pattern;
     const brushBtn = p.querySelector(".brush");
     const eyeBtn = p.querySelector(".eye");
     const trashBtn = p.querySelector(".trash");
 
-    createPattern(patternUrl, `pattern_${id}`);
+    // pre-create pattern (optional)
+    createPatternURLImageAsPattern(patternUrl, `pattern_${id}`);
 
-    // Sélection principale
-    p.addEventListener("click", () => {
+    // clicking whole papillon selects it and activates brush
+    p.addEventListener("click", (e) => {
+      // if clicking a control button, let button handler run (stopPropagation in buttons)
+      if (e.target.closest(".control-btn")) return;
       document.querySelectorAll(".papillon").forEach(x => x.classList.remove("active"));
       p.classList.add("active");
-      selectedPapillon = { id, patternUrl };
-    });
-
-    // Pinceau = active aussi
-    brushBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      document.querySelectorAll(".control-btn.brush").forEach(b => b.classList.remove("active"));
+      // mark brush active for this papillon
+      document.querySelectorAll(".control-btn.brush").forEach(b=>b.classList.remove("active"));
       brushBtn.classList.add("active");
-      selectedPapillon = { id, patternUrl };
+      selectedPapillon = { id: id, patternUrl: patternUrl };
     });
 
-    // Œil = masque / affiche les zones peintes
-    eyeBtn.addEventListener("click", e => {
+    // brush button: activate brush (same as clicking papillon)
+    brushBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const visible = !eyeBtn.classList.contains("active");
-      eyeBtn.classList.toggle("active", visible);
+      document.querySelectorAll(".papillon").forEach(x => x.classList.remove("active"));
+      p.classList.add("active");
+      document.querySelectorAll(".control-btn.brush").forEach(b=>b.classList.remove("active"));
+      brushBtn.classList.add("active");
+      selectedPapillon = { id: id, patternUrl: patternUrl };
+    });
 
-      zones.each(function(d) {
-        if (painted[id]?.has(d.properties.couleur)) {
-          d3.select(this).attr("fill", visible ? `url(#pattern_${id})` : "#ffffff");
+    // eye toggles visibility of painted areas for this papillon
+    eyeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const show = !eyeBtn.classList.contains("active");
+      eyeBtn.classList.toggle("active", show);
+      // iterate zones and show/hide those painted for this papillon
+      zones.each(function(d){
+        const idx = d._idx;
+        const isPainted = painted[id] && painted[id].has(idx);
+        if (isPainted) {
+          const node = d3.select(this);
+          if (show) {
+            // restore pattern
+            const pid = `pattern_${id}`;
+            createPatternURLImageAsPattern(patternUrl, pid);
+            node.attr("fill", `url(#${pid})`);
+          } else {
+            node.attr("fill", "#ffffff");
+          }
         }
       });
     });
 
-    // Poubelle = reset complet
-    trashBtn.addEventListener("click", e => {
+    // trash clears all painted for this papillon
+    trashBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       painted[id] = new Set();
-      zones.filter(d => d.properties.couleur == id).attr("fill", "#ffffff");
+      zones.filter(d => painted[id].has(d._idx) ).attr("fill","#ffffff");
+      // simply remove fills for that papillon anywhere
+      zones.each(function(d){
+        if (d.properties.couleur == id) d3.select(this).attr("fill","#ffffff");
+      });
+      // ensure eye off
+      eyeBtn.classList.remove("active");
     });
   });
-});
+
+  /* --- responsive: redraw on resize simple approach: reload page (keeps code simple) --- */
+  window.addEventListener("resize", ()=> location.reload());
+})
+.catch(err => { console.error("Erreur chargement geojson:", err); });
 </script>
 </body>
 </html>
