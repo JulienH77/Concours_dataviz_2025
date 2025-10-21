@@ -105,7 +105,7 @@
       attributionControl: false
     }).setView([48.5, 6.5], 7);
 
-    // ✅ fond de carte OSM
+    // fond OSM
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 18,
       attribution: '© OpenStreetMap contributors'
@@ -126,7 +126,7 @@
       });
     });
 
-    // Création d'un pattern SVG réutilisable
+    // Création d'un pattern SVG réutilisable (si existe déjà, ne recrée pas)
     function createSvgPattern(url, id) {
       if (document.getElementById(id)) return;
       const svgNS = "http://www.w3.org/2000/svg";
@@ -152,17 +152,6 @@
       document.body.appendChild(svg);
     }
 
-    // Calcul du centroïde (simple)
-    function getCentroid(coords) {
-      let latSum = 0, lngSum = 0, count = 0;
-      coords[0].forEach(c => {
-        latSum += c[1];
-        lngSum += c[0];
-        count++;
-      });
-      return [latSum / count, lngSum / count];
-    }
-
     // Chargement du GeoJSON
     fetch("epci_grand-est.geojson")
       .then(res => res.json())
@@ -175,33 +164,59 @@
             fillOpacity: 1.0,
           },
           onEachFeature: (feature, layer) => {
-            if (feature.properties.couleur) {
-              const coords = feature.geometry.type === "Polygon"
-                ? getCentroid(feature.geometry.coordinates[0])
-                : getCentroid(feature.geometry.coordinates[0][0]);
+            // place un label fixe au centre de la géométrie en utilisant layer.getBounds().getCenter()
+            // (fonctionne pour Polygon et MultiPolygon et évite NaN)
+            try {
+              let centerLatLng;
+              if (feature.geometry && feature.geometry.type === "Point") {
+                // si c'est un point, on utilise directement la coordonnée
+                const c = feature.geometry.coordinates; // [lng, lat]
+                centerLatLng = L.latLng(c[1], c[0]);
+              } else {
+                // pour les polygones/multipolygones : bounds center
+                const bounds = layer.getBounds();
+                if (bounds && bounds.isValid()) {
+                  centerLatLng = bounds.getCenter();
+                } else {
+                  // fallback : si bounding box invalide, ignore le label
+                  centerLatLng = null;
+                }
+              }
 
-              const divIcon = L.divIcon({
-                html: `<div class="label-text">${feature.properties.couleur}</div>`,
-                className: "",
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-              });
-              const marker = L.marker([coords[0], coords[1]], { icon: divIcon, interactive: false });
-              marker.addTo(map);
+              if (centerLatLng && feature.properties && (feature.properties.couleur !== undefined && feature.properties.couleur !== null)) {
+                const divIcon = L.divIcon({
+                  html: `<div class="label-text">${feature.properties.couleur}</div>`,
+                  className: "",
+                  iconSize: [20, 20],
+                  iconAnchor: [10, 10]
+                });
+                L.marker(centerLatLng, { icon: divIcon, interactive: false }).addTo(map);
+              }
+            } catch (err) {
+              console.warn("Impossible de placer le label pour une feature :", err);
             }
 
+            // Interaction au clic : applique le pattern si le numéro correspond
             layer.on("click", () => {
               if (!selectedPapillon) return;
-              if (feature.properties.couleur == selectedPapillon.id) {
+              if (feature.properties && feature.properties.couleur == selectedPapillon.id) {
                 const patternId = `pattern_${selectedPapillon.id}`;
                 createSvgPattern(selectedPapillon.patternUrl, patternId);
-                layer._path.setAttribute("fill", `url(#${patternId})`);
+                // applique directement le pattern SVG comme fill sur le path
+                if (layer._path) {
+                  layer._path.setAttribute("fill", `url(#${patternId})`);
+                } else {
+                  console.warn("Layer path introuvable pour cette feature.");
+                }
               }
             });
           },
         }).addTo(map);
 
         map.fitBounds(geoLayer.getBounds());
+      })
+      .catch(err => {
+        console.error("Erreur chargement GeoJSON :", err);
       });
   </script>
 </body>
