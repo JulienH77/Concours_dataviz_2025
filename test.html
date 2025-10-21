@@ -3,52 +3,78 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Vérification du chargement GeoJSON</title>
+  <title>Carte des zones EPCI avec coloration</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    pre { background: #f4f4f4; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto; }
-    .error { color: red; }
-    .success { color: green; }
+    html, body { height: 100%; margin: 0; }
+    #map { width: 100%; height: 100%; background: #f0f0f0; }
+    .epci { stroke: #333; stroke-width: 0.5; fill: none; }
+    .label { font-size: 12px; fill: #000; text-anchor: middle; }
   </style>
 </head>
 <body>
-  <h1>Vérification du chargement GeoJSON</h1>
-  <div id="status"></div>
-  <div id="data"></div>
-
+  <div id="map"></div>
   <script>
-    // URL du fichier GeoJSON
-    const geojsonUrl = "epci_grand-est.geojson";
+    // ID du papillon sélectionné (par défaut : 3)
+    const selectedPapillonId = 3;
 
-    // Affiche un message dans la page
-    function showMessage(message, isError = false) {
-      const statusDiv = document.getElementById("status");
-      statusDiv.innerHTML = `<p class="${isError ? 'error' : 'success'}">${message}</p>`;
-    }
+    // Charge le fichier GeoJSON et dessine la carte
+    d3.json("epci_grand-est.geojson").then(geojson => {
+      console.log("GeoJSON chargé avec succès:", geojson.features.slice(0, 3));
 
-    // Affiche les données GeoJSON
-    function showData(geojson) {
-      const dataDiv = document.getElementById("data");
-      dataDiv.innerHTML = `<h2>Données GeoJSON chargées :</h2>
-                           <pre>${JSON.stringify(geojson.features.slice(0, 3), null, 2)}</pre>`;
-    }
+      // Crée le conteneur SVG
+      const svg = d3.select("#map").append("svg")
+        .attr("width", "100%")
+        .attr("height", "100%");
 
-    // Charge le fichier GeoJSON
-    fetch(geojsonUrl)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Erreur HTTP! statut: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(geojson => {
-        showMessage("GeoJSON chargé avec succès !");
-        showData(geojson);
-      })
-      .catch(error => {
-        showMessage(`Erreur lors du chargement du GeoJSON : ${error.message}`, true);
-        console.error("Erreur détaillée :", error);
-      });
+      // Détermine la taille du conteneur
+      const width = document.getElementById("map").clientWidth;
+      const height = document.getElementById("map").clientHeight;
+
+      // Crée une projection et un générateur de path
+      const projection = d3.geoMercator().fitSize([width, height], geojson);
+      const path = d3.geoPath().projection(projection);
+
+      // Dessine les zones EPCI
+      svg.selectAll("path.epci")
+        .data(geojson.features)
+        .enter()
+        .append("path")
+        .attr("class", "epci")
+        .attr("d", path)
+        .attr("fill", "none")
+        .attr("stroke", "blue")
+        .on("click", function(event, d) {
+          const couleur = d.properties.couleur;
+          console.log("Zone EPCI cliquée, couleur:", couleur);
+          if (couleur === selectedPapillonId) {
+            d3.select(this)
+              .attr("fill", "red")
+              .attr("stroke", "black")
+              .attr("stroke-width", 2);
+            console.log("Zone colorée en rouge !");
+          } else {
+            console.log("Zone non autorisée pour ce papillon.");
+          }
+        });
+
+      // Ajoute les labels
+      svg.selectAll("text.label")
+        .data(geojson.features)
+        .enter()
+        .append("text")
+        .attr("class", "label")
+        .attr("x", d => path.centroid(d)[0])
+        .attr("y", d => path.centroid(d)[1])
+        .text(d => d.properties.couleur);
+    }).catch(error => {
+      console.error("Erreur lors du chargement du GeoJSON:", error);
+      d3.select("#map").append("div")
+        .style("color", "red")
+        .style("text-align", "center")
+        .style("padding", "20px")
+        .text(`Erreur de chargement du GeoJSON : ${error.message}`);
+    });
   </script>
 </body>
 </html>
