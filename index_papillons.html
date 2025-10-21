@@ -1,201 +1,188 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Carte des Papillons du Grand Est</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Papillons du Grand Est — Vue statique</title>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: "Segoe UI", sans-serif;
-      overflow: hidden;
-      background: white;
-    }
+<style>
+  body {
+    font-family: "Segoe UI", sans-serif;
+    margin: 0;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
 
-    #map {
-      height: calc(100% - 180px);
-      width: 100%;
-    }
+  #svgContainer {
+    flex: 1;
+    overflow: auto;
+    background: white;
+  }
 
-    #papillons {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      height: 180px;
-      background: #f8f8f8;
-      border-top: 2px solid #ccc;
-      padding: 10px 0;
-    }
+  svg {
+    width: 100%;
+    height: 100%;
+  }
 
-    .papillon {
-      cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
-      text-align: center;
-      border-radius: 10px;
-      padding: 5px 10px;
-    }
+  #papillons {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 180px;
+    border-top: 2px solid #ccc;
+    background: #f8f8f8;
+  }
 
-    .papillon img {
-      height: 100px;
-      display: block;
-      margin: 5px auto;
-    }
+  .papillon {
+    cursor: pointer;
+    text-align: center;
+    border-radius: 10px;
+    padding: 5px 10px;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
 
-    .papillon-name {
-      font-style: italic;
-      font-size: 1.1em;
-      margin-bottom: 5px;
-    }
+  .papillon:hover, .papillon.active {
+    transform: scale(1.1);
+    background: #eef;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  }
 
-    .papillon:hover, .papillon.active {
-      transform: scale(1.1);
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-      background-color: #eef;
-    }
+  .papillon img {
+    height: 100px;
+    display: block;
+    margin: 5px auto;
+  }
 
-    .label-text {
-      font-weight: bold;
-      font-size: 14px;
-      color: black;
-      text-shadow: 0 0 3px white;
-      pointer-events: none;
-    }
-  </style>
+  .papillon-name {
+    font-style: italic;
+    margin-bottom: 5px;
+  }
+
+  text.label {
+    font-size: 12px;
+    font-weight: bold;
+    fill: black;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
+  }
+</style>
 </head>
 <body>
 
-  <div id="map"></div>
+<div id="svgContainer">
+  <svg id="map"></svg>
+</div>
 
-  <div id="papillons">
-    <div class="papillon" data-id="1" data-pattern="images_papillons/pattern_AGLAIS_IO.png">
-      <div class="papillon-name"><i>Aglais io</i></div>
-      <img src="images_papillons/papillon_AGLAIS_IO.png" alt="Aglais io" />
-    </div>
-    <div class="papillon" data-id="2" data-pattern="images_papillons/pattern_AGLAIS_URTICAE.png">
-      <div class="papillon-name"><i>Aglais urticae</i></div>
-      <img src="images_papillons/papillon_AGLAIS_URTICAE.png" alt="Aglais urticae" />
-    </div>
-    <div class="papillon" data-id="3" data-pattern="images_papillons/pattern_GONEPTERYX_RHAMNI.png">
-      <div class="papillon-name"><i>Gonepteryx rhamni</i></div>
-      <img src="images_papillons/papillon_GONEPTERYX_RHAMNI.png" alt="Gonepteryx rhamni" />
-    </div>
-    <div class="papillon" data-id="4" data-pattern="images_papillons/pattern_VANESSA_ATALANTA.png">
-      <div class="papillon-name"><i>Vanessa atalanta</i></div>
-      <img src="images_papillons/papillon_VANESSA_ATALANTA.png" alt="Vanessa atalanta" />
-    </div>
-    <div class="papillon" data-id="5" data-pattern="images_papillons/pattern_VANESSA_CARDUI.png">
-      <div class="papillon-name"><i>Vanessa cardui</i></div>
-      <img src="images_papillons/papillon_VANESSA_CARDUI.png" alt="Vanessa cardui" />
-    </div>
+<div id="papillons">
+  <div class="papillon" data-id="1" data-pattern="images_papillons/pattern_AGLAIS_IO.png">
+    <div class="papillon-name"><i>Aglais io</i></div>
+    <img src="images_papillons/papillon_AGLAIS_IO.png" alt="Aglais io">
   </div>
+  <div class="papillon" data-id="2" data-pattern="images_papillons/pattern_AGLAIS_URTICAE.png">
+    <div class="papillon-name"><i>Aglais urticae</i></div>
+    <img src="images_papillons/papillon_AGLAIS_URTICAE.png" alt="Aglais urticae">
+  </div>
+  <div class="papillon" data-id="3" data-pattern="images_papillons/pattern_GONEPTERYX_RHAMNI.png">
+    <div class="papillon-name"><i>Gonepteryx rhamni</i></div>
+    <img src="images_papillons/papillon_GONEPTERYX_RHAMNI.png" alt="Gonepteryx rhamni">
+  </div>
+  <div class="papillon" data-id="4" data-pattern="images_papillons/pattern_VANESSA_ATALANTA.png">
+    <div class="papillon-name"><i>Vanessa atalanta</i></div>
+    <img src="images_papillons/papillon_VANESSA_ATALANTA.png" alt="Vanessa atalanta">
+  </div>
+  <div class="papillon" data-id="5" data-pattern="images_papillons/pattern_VANESSA_CARDUI.png">
+    <div class="papillon-name"><i>Vanessa cardui</i></div>
+    <img src="images_papillons/papillon_VANESSA_CARDUI.png" alt="Vanessa cardui">
+  </div>
+</div>
 
-  <script>
-    const map = L.map("map", {
-      zoomSnap: 0.5,
-      zoomControl: true
-    }).setView([48.5, 6.5], 7);
+<script>
+const svg = d3.select("#map");
+const g = svg.append("g");
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 18,
-      attribution: "© OpenStreetMap contributors"
-    }).addTo(map);
+let selectedPapillon = null;
 
-    let selectedPapillon = null;
+// Fonction de création d’un motif SVG à partir d’une image
+function createPattern(url, id) {
+  if (document.getElementById(id)) return;
+  const defs = svg.append("defs");
+  defs.append("pattern")
+    .attr("id", id)
+    .attr("patternUnits", "objectBoundingBox")
+    .attr("width", 1)
+    .attr("height", 1)
+    .append("image")
+    .attr("href", url)
+    .attr("width", 100)
+    .attr("height", 100)
+    .attr("preserveAspectRatio", "xMidYMid slice");
+}
 
-    document.querySelectorAll(".papillon").forEach((el) => {
-      el.addEventListener("click", () => {
-        document.querySelectorAll(".papillon").forEach((p) => p.classList.remove("active"));
-        el.classList.add("active");
-        selectedPapillon = {
-          id: el.getAttribute("data-id"),
-          patternUrl: el.getAttribute("data-pattern"),
-        };
-        map.getContainer().style.cursor = "url('https://cdn-icons-png.flaticon.com/512/616/616408.png') 16 16, crosshair";
-      });
+// Charger le GeoJSON principal
+Promise.all([
+  d3.json("epci_grand-est.geojson"),
+  d3.json("corps_papillon_epci.geojson")
+]).then(([epci, corps]) => {
+
+  const projection = d3.geoMercator().fitSize([window.innerWidth, window.innerHeight - 180], epci);
+  const path = d3.geoPath().projection(projection);
+
+  // Polygones des EPCI
+  const zones = g.selectAll("path.epci")
+    .data(epci.features)
+    .enter()
+    .append("path")
+    .attr("class", "epci")
+    .attr("d", path)
+    .attr("fill", "#ffffff")
+    .attr("stroke", "#333")
+    .attr("stroke-width", 0.5);
+
+  // Labels au centre
+  g.selectAll("text.label")
+    .data(epci.features)
+    .enter()
+    .append("text")
+    .attr("class", "label")
+    .attr("x", d => path.centroid(d)[0])
+    .attr("y", d => path.centroid(d)[1])
+    .text(d => d.properties.couleur);
+
+  // Couche noire semi-transparente au-dessus
+  g.selectAll("path.corps")
+    .data(corps.features)
+    .enter()
+    .append("path")
+    .attr("class", "corps")
+    .attr("d", path)
+    .attr("fill", "rgba(0,0,0,0.7)")
+    .attr("stroke", "none");
+
+  // Interaction avec les papillons
+  document.querySelectorAll(".papillon").forEach(el => {
+    el.addEventListener("click", () => {
+      document.querySelectorAll(".papillon").forEach(p => p.classList.remove("active"));
+      el.classList.add("active");
+      selectedPapillon = {
+        id: el.getAttribute("data-id"),
+        patternUrl: el.getAttribute("data-pattern")
+      };
+      const patternId = `pattern_${selectedPapillon.id}`;
+      createPattern(selectedPapillon.patternUrl, patternId);
+
+      // Remplir les EPCI correspondants
+      zones.transition().duration(500)
+        .attr("fill", d => d.properties.couleur == selectedPapillon.id
+          ? `url(#${patternId})`
+          : "#ffffff");
     });
-
-    function createSvgPattern(url, id) {
-      if (document.getElementById(id)) return;
-      const svgNS = "http://www.w3.org/2000/svg";
-      const svg = document.createElementNS(svgNS, "svg");
-      svg.setAttribute("width", 0);
-      svg.setAttribute("height", 0);
-
-      const defs = document.createElementNS(svgNS, "defs");
-      const pattern = document.createElementNS(svgNS, "pattern");
-      pattern.setAttribute("id", id);
-      pattern.setAttribute("patternUnits", "objectBoundingBox");
-      pattern.setAttribute("width", 1);
-      pattern.setAttribute("height", 1);
-
-      const image = document.createElementNS(svgNS, "image");
-      image.setAttributeNS(null, "href", url);
-      image.setAttribute("width", 100);
-      image.setAttribute("height", 100);
-      image.setAttribute("preserveAspectRatio", "xMidYMid slice");
-
-      pattern.appendChild(image);
-      defs.appendChild(pattern);
-      svg.appendChild(defs);
-      document.body.appendChild(svg);
-    }
-
-    // Couche principale des EPCI
-    fetch("epci_grand-est.geojson")
-      .then(res => res.json())
-      .then(data => {
-        const epciLayer = L.geoJSON(data, {
-          style: {
-            color: "#333",
-            weight: 1,
-            fillColor: "#ffffff",
-            fillOpacity: 1
-          },
-          onEachFeature: (feature, layer) => {
-            const bounds = layer.getBounds();
-            if (bounds && bounds.isValid() && feature.properties && feature.properties.couleur) {
-              const center = bounds.getCenter();
-              const label = L.divIcon({
-                html: `<div class="label-text">${feature.properties.couleur}</div>`,
-                className: "",
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-              });
-              L.marker(center, { icon: label, interactive: false }).addTo(map);
-            }
-
-            layer.on("click", () => {
-              if (!selectedPapillon) return;
-              if (feature.properties.couleur == selectedPapillon.id) {
-                const patternId = `pattern_${selectedPapillon.id}`;
-                createSvgPattern(selectedPapillon.patternUrl, patternId);
-                if (layer._path) layer._path.setAttribute("fill", `url(#${patternId})`);
-              }
-            });
-          }
-        }).addTo(map);
-
-        // Couche par-dessus (corps du papillon)
-        fetch("corps_papillon_epci.geojson")
-          .then(res => res.json())
-          .then(overlay => {
-            L.geoJSON(overlay, {
-              style: {
-                fillColor: "#000000",
-                fillOpacity: 0.7,
-                stroke: false
-              }
-            }).addTo(map);
-          });
-
-        map.fitBounds(epciLayer.getBounds());
-      });
-  </script>
+  });
+});
+</script>
 </body>
 </html>
