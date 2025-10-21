@@ -60,13 +60,10 @@
     }
 
     .label-text {
-      background: none !important;
-      border: none !important;
-      box-shadow: none !important;
       font-weight: bold;
       font-size: 14px;
-      color: #000;
-      text-shadow: 0 0 2px white;
+      color: black;
+      text-shadow: 0 0 3px white;
       pointer-events: none;
     }
   </style>
@@ -101,19 +98,16 @@
   <script>
     const map = L.map("map", {
       zoomSnap: 0.5,
-      zoomControl: true,
-      attributionControl: false
+      zoomControl: true
     }).setView([48.5, 6.5], 7);
 
-    // fond OSM
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 18,
-      attribution: '© OpenStreetMap contributors'
+      attribution: "© OpenStreetMap contributors"
     }).addTo(map);
 
     let selectedPapillon = null;
 
-    // Sélection du papillon
     document.querySelectorAll(".papillon").forEach((el) => {
       el.addEventListener("click", () => {
         document.querySelectorAll(".papillon").forEach((p) => p.classList.remove("active"));
@@ -126,7 +120,6 @@
       });
     });
 
-    // Création d'un pattern SVG réutilisable (si existe déjà, ne recrée pas)
     function createSvgPattern(url, id) {
       if (document.getElementById(id)) return;
       const svgNS = "http://www.w3.org/2000/svg";
@@ -137,14 +130,15 @@
       const defs = document.createElementNS(svgNS, "defs");
       const pattern = document.createElementNS(svgNS, "pattern");
       pattern.setAttribute("id", id);
-      pattern.setAttribute("patternUnits", "userSpaceOnUse");
-      pattern.setAttribute("width", 100);
-      pattern.setAttribute("height", 100);
+      pattern.setAttribute("patternUnits", "objectBoundingBox");
+      pattern.setAttribute("width", 1);
+      pattern.setAttribute("height", 1);
 
       const image = document.createElementNS(svgNS, "image");
       image.setAttributeNS(null, "href", url);
       image.setAttribute("width", 100);
       image.setAttribute("height", 100);
+      image.setAttribute("preserveAspectRatio", "xMidYMid slice");
 
       pattern.appendChild(image);
       defs.appendChild(pattern);
@@ -152,71 +146,55 @@
       document.body.appendChild(svg);
     }
 
-    // Chargement du GeoJSON
+    // Couche principale des EPCI
     fetch("epci_grand-est.geojson")
       .then(res => res.json())
       .then(data => {
-        const geoLayer = L.geoJSON(data, {
+        const epciLayer = L.geoJSON(data, {
           style: {
             color: "#333",
             weight: 1,
             fillColor: "#ffffff",
-            fillOpacity: 1.0,
+            fillOpacity: 1
           },
           onEachFeature: (feature, layer) => {
-            // place un label fixe au centre de la géométrie en utilisant layer.getBounds().getCenter()
-            // (fonctionne pour Polygon et MultiPolygon et évite NaN)
-            try {
-              let centerLatLng;
-              if (feature.geometry && feature.geometry.type === "Point") {
-                // si c'est un point, on utilise directement la coordonnée
-                const c = feature.geometry.coordinates; // [lng, lat]
-                centerLatLng = L.latLng(c[1], c[0]);
-              } else {
-                // pour les polygones/multipolygones : bounds center
-                const bounds = layer.getBounds();
-                if (bounds && bounds.isValid()) {
-                  centerLatLng = bounds.getCenter();
-                } else {
-                  // fallback : si bounding box invalide, ignore le label
-                  centerLatLng = null;
-                }
-              }
-
-              if (centerLatLng && feature.properties && (feature.properties.couleur !== undefined && feature.properties.couleur !== null)) {
-                const divIcon = L.divIcon({
-                  html: `<div class="label-text">${feature.properties.couleur}</div>`,
-                  className: "",
-                  iconSize: [20, 20],
-                  iconAnchor: [10, 10]
-                });
-                L.marker(centerLatLng, { icon: divIcon, interactive: false }).addTo(map);
-              }
-            } catch (err) {
-              console.warn("Impossible de placer le label pour une feature :", err);
+            const bounds = layer.getBounds();
+            if (bounds && bounds.isValid() && feature.properties && feature.properties.couleur) {
+              const center = bounds.getCenter();
+              const label = L.divIcon({
+                html: `<div class="label-text">${feature.properties.couleur}</div>`,
+                className: "",
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+              });
+              L.marker(center, { icon: label, interactive: false }).addTo(map);
             }
 
-            // Interaction au clic : applique le pattern si le numéro correspond
             layer.on("click", () => {
               if (!selectedPapillon) return;
-              if (feature.properties && feature.properties.couleur == selectedPapillon.id) {
+              if (feature.properties.couleur == selectedPapillon.id) {
                 const patternId = `pattern_${selectedPapillon.id}`;
                 createSvgPattern(selectedPapillon.patternUrl, patternId);
-                // applique directement le pattern SVG comme fill sur le path
-                if (layer._path) {
-                  layer._path.setAttribute("fill", `url(#${patternId})`);
-                } else {
-                  console.warn("Layer path introuvable pour cette feature.");
-                }
+                if (layer._path) layer._path.setAttribute("fill", `url(#${patternId})`);
               }
             });
-          },
+          }
         }).addTo(map);
 
-        map.fitBounds(geoLayer.getBounds());
-      })
-      .catch(err => {
-        console.error("Erreur chargement GeoJSON :", err);
+        // Couche par-dessus (corps du papillon)
+        fetch("corps_papillon_epci.geojson")
+          .then(res => res.json())
+          .then(overlay => {
+            L.geoJSON(overlay, {
+              style: {
+                fillColor: "#000000",
+                fillOpacity: 0.7,
+                stroke: false
+              }
+            }).addTo(map);
+          });
+
+        map.fitBounds(epciLayer.getBounds());
       });
   </script>
 </body>
