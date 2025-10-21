@@ -110,7 +110,7 @@
     </div>
   </div>
   <script>
-    /* ---------- Mapping des IDs numériques aux noms de motifs ---------- */
+    // Mapping des IDs numériques aux chemins des motifs
     const papillonPatternMap = {
       "1": "images_papillons/pattern_AGLAIS_IO.png",
       "2": "images_papillons/pattern_AGLAIS_URTICAE.png",
@@ -119,14 +119,14 @@
       "5": "images_papillons/pattern_VANESSA_CARDUI.png"
     };
 
-    /* ---------- État global ---------- */
+    // État global
     const svg = d3.select("#svg");
     const container = document.getElementById("svgContainer");
-    let selectedPapillon = null; // {id: "1", patternUrl: "..."}
-    const painted = {}; // painted[id] = Set(feature_idx)
+    let selectedPapillon = null;
+    const painted = {};
     const patternCreated = new Set();
 
-    /* Crée un motif SVG pour un papillon donné */
+    // Crée un motif SVG pour un papillon donné
     function ensurePattern(url, pid) {
       if (patternCreated.has(pid)) return;
       console.log("Création du motif pour :", url, "avec ID :", pid);
@@ -147,7 +147,7 @@
       patternCreated.add(pid);
     }
 
-    /* Redessine tout le contenu SVG */
+    // Redessine tout le contenu SVG
     function draw() {
       svg.selectAll("*").remove();
       const w = container.clientWidth || 1000;
@@ -229,7 +229,7 @@
       }).catch(err => console.error("Erreur chargement GeoJSON:", err));
     }
 
-    /* Configure les boutons pour chaque papillon */
+    // Configure les boutons pour chaque papillon
     function setupControls(zones) {
       document.querySelectorAll(".papillon").forEach(p => {
         const id = p.dataset.id;
