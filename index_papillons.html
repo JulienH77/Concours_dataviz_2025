@@ -49,7 +49,7 @@
   <div id="svgContainer"><svg id="svg"></svg></div>
   <div id="papillons">
     <!-- Papillon 1: Aglais IO -->
-    <div class="papillon" data-id="AGLAIS_IO" data-pattern="images_papillons/pattern_AGLAIS_IO.png">
+    <div class="papillon" data-id="1" data-pattern="images_papillons/pattern_AGLAIS_IO.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_AGLAIS_IO.png" alt="Aglais io">
         <div class="pap-label"><i>Aglais io</i></div>
@@ -61,7 +61,7 @@
       </div>
     </div>
     <!-- Papillon 2: Aglais Urticae -->
-    <div class="papillon" data-id="AGLAIS_URTICAE" data-pattern="images_papillons/pattern_AGLAIS_URTICAE.png">
+    <div class="papillon" data-id="2" data-pattern="images_papillons/pattern_AGLAIS_URTICAE.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_AGLAIS_URTICAE.png" alt="Aglais urticae">
         <div class="pap-label"><i>Aglais urticae</i></div>
@@ -73,7 +73,7 @@
       </div>
     </div>
     <!-- Papillon 3: Gonepteryx Rhamni -->
-    <div class="papillon" data-id="GONEPTERYX_RHAMNI" data-pattern="images_papillons/pattern_GONEPTERYX_RHAMNI.png">
+    <div class="papillon" data-id="3" data-pattern="images_papillons/pattern_GONEPTERYX_RHAMNI.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_GONEPTERYX_RHAMNI.png" alt="Gonepteryx rhamni">
         <div class="pap-label"><i>Gonepteryx rhamni</i></div>
@@ -85,7 +85,7 @@
       </div>
     </div>
     <!-- Papillon 4: Vanessa Atalanta -->
-    <div class="papillon" data-id="VANESSA_ATALANTA" data-pattern="images_papillons/pattern_VANESSA_ATALANTA.png">
+    <div class="papillon" data-id="4" data-pattern="images_papillons/pattern_VANESSA_ATALANTA.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_VANESSA_ATALANTA.png" alt="Vanessa atalanta">
         <div class="pap-label"><i>Vanessa atalanta</i></div>
@@ -97,7 +97,7 @@
       </div>
     </div>
     <!-- Papillon 5: Vanessa Cardui -->
-    <div class="papillon" data-id="VANESSA_CARDUI" data-pattern="images_papillons/pattern_VANESSA_CARDUI.png">
+    <div class="papillon" data-id="5" data-pattern="images_papillons/pattern_VANESSA_CARDUI.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_VANESSA_CARDUI.png" alt="Vanessa cardui">
         <div class="pap-label"><i>Vanessa cardui</i></div>
@@ -110,10 +110,19 @@
     </div>
   </div>
   <script>
+    /* ---------- Mapping des IDs numériques aux noms de motifs ---------- */
+    const papillonPatternMap = {
+      "1": "images_papillons/pattern_AGLAIS_IO.png",
+      "2": "images_papillons/pattern_AGLAIS_URTICAE.png",
+      "3": "images_papillons/pattern_GONEPTERYX_RHAMNI.png",
+      "4": "images_papillons/pattern_VANESSA_ATALANTA.png",
+      "5": "images_papillons/pattern_VANESSA_CARDUI.png"
+    };
+
     /* ---------- État global ---------- */
     const svg = d3.select("#svg");
     const container = document.getElementById("svgContainer");
-    let selectedPapillon = null; // {id: "AGLAIS_IO", patternUrl: "..."}
+    let selectedPapillon = null; // {id: "1", patternUrl: "..."}
     const painted = {}; // painted[id] = Set(feature_idx)
     const patternCreated = new Set();
 
@@ -174,14 +183,15 @@
               console.log("Aucun papillon sélectionné.");
               return;
             }
-            const papId = selectedPapillon.id;
+            const papId = String(selectedPapillon.id);
             const featNum = String(d.properties.couleur);
             console.log("Papillon ID:", papId, "EPCI couleur:", featNum);
             if (featNum === papId) {
               painted[papId] = painted[papId] || new Set();
               painted[papId].add(d._idx);
               const pid = `pattern_${papId}`;
-              ensurePattern(selectedPapillon.patternUrl, pid);
+              const patternUrl = papillonPatternMap[papId];
+              ensurePattern(patternUrl, pid);
               d3.select(this).attr("fill", `url(#${pid})`);
               console.log("Motif appliqué :", pid);
             } else {
@@ -223,7 +233,7 @@
     function setupControls(zones) {
       document.querySelectorAll(".papillon").forEach(p => {
         const id = p.dataset.id;
-        const patternUrl = p.dataset.pattern;
+        const patternUrl = papillonPatternMap[id];
         const brushBtn = p.querySelector(".brush");
         const eyeBtn = p.querySelector(".eye");
         const trashBtn = p.querySelector(".trash");
@@ -238,7 +248,7 @@
           p.classList.add("active");
           document.querySelectorAll(".control-btn.brush").forEach(b => b.classList.remove("active"));
           brushBtn.classList.add("active");
-          selectedPapillon = { id: id, patternUrl: patternUrl };
+          selectedPapillon = { id: String(id), patternUrl: patternUrl };
           console.log("Papillon sélectionné :", selectedPapillon);
         };
 
@@ -249,7 +259,7 @@
           p.classList.add("active");
           document.querySelectorAll(".control-btn.brush").forEach(b => b.classList.remove("active"));
           brushBtn.classList.add("active");
-          selectedPapillon = { id: id, patternUrl: patternUrl };
+          selectedPapillon = { id: String(id), patternUrl: patternUrl };
           console.log("Pinceau activé pour :", selectedPapillon);
         };
 
