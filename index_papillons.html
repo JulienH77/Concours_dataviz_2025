@@ -189,11 +189,9 @@
             if (featNum === papId) {
               painted[papId] = painted[papId] || new Set();
               painted[papId].add(d._idx);
-              const pid = `pattern_${papId}`;
-              const patternUrl = papillonPatternMap[papId];
-              ensurePattern(patternUrl, pid);
-              d3.select(this).attr("fill", `url(#${pid})`);
-              console.log("Motif appliqué :", pid);
+              // TEST : Applique une couleur unie au lieu du motif
+              d3.select(this).attr("fill", "red");
+              console.log("Zone colorée en rouge (test)");
             } else {
               // Flash rouge si non autorisé
               const node = d3.select(this);
@@ -273,7 +271,8 @@
             const paintedSet = painted[id];
             if (paintedSet && paintedSet.has(idx)) {
               const node = d3.select(this);
-              node.attr("fill", show ? `url(#pattern_${id})` : "#ffffff");
+              // TEST : Applique une couleur unie au lieu du motif
+              node.attr("fill", show ? "red" : "#ffffff");
             }
           });
           console.log("Visibilité basculée pour le papillon :", id);
