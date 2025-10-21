@@ -49,11 +49,13 @@
         .attr("width", 100)
         .attr("height", 100);
 
+      // Ajoute un rectangle de fond pour vérifier que le motif est créé
       pattern.append("rect")
         .attr("width", 100)
         .attr("height", 100)
         .attr("fill", "pink"); // Fond rose pour vérifier que le motif est créé
 
+      // Ajoute l'image du motif
       pattern.append("image")
         .attr("href", url)
         .attr("width", 100)
