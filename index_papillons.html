@@ -80,7 +80,7 @@
 
   // --- Chargement GeoJSON ---
   Promise.all([
-    d3.json("data/epci_grand-est.geojson")
+    d3.json("epci_grand-est.geojson")
   ]).then(([epci]) => {
     const projection = d3.geoMercator().fitSize([width, height], epci);
     const path = d3.geoPath().projection(projection);
@@ -131,3 +131,4 @@
   </script>
 </body>
 </html>
+
