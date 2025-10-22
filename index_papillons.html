@@ -115,12 +115,15 @@
 
           if (featNum == papId) {
             // Crée une image masquée par la forme EPCI
+            const bounds = path.bounds(d); // [[x0,y0],[x1,y1]]
             imagesGroup.append("image")
               .attr("href", selectedPapillon.patternUrl)
-              .attr("width", width)
-              .attr("height", height)
+              .attr("x", bounds[0][0])
+              .attr("y", bounds[0][1])
+              .attr("width", bounds[1][0] - bounds[0][0])
+              .attr("height", bounds[1][1] - bounds[0][1])
               .attr("clip-path", `url(#${clipId})`)
-              .lower(); // pour passer sous les traits de contour
+              .lower();
           } else {
             d3.select(this).classed("flash-red", true);
             setTimeout(() => d3.select(this).classed("flash-red", false), 500);
@@ -131,4 +134,5 @@
   </script>
 </body>
 </html>
+
 
