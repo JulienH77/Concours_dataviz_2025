@@ -39,7 +39,7 @@
       font-size:12px;font-weight:700;fill:#000;pointer-events:none;
       text-anchor:middle;dominant-baseline:middle;
     }
-    .epci{stroke:#333;stroke-width:0.5;fill:#fff}
+    .epci{stroke:#333;stroke-width:0.5;fill:#fff;cursor:pointer}
     .corps-layer{fill:rgba(0,0,0,0.7);pointer-events:none}
     .flash-red { animation: flashred 900ms; }
     @keyframes flashred { 0% { fill: #ffbdbd } 50% { fill: #ff9b9b } 100% { } }
@@ -60,7 +60,7 @@
         <button class="control-btn trash" title="Reset">🗑️</button>
       </div>
     </div>
-    <!-- Papillon 2: Aglais Urticae -->
+    <!-- Papillon 2... (idem) -->
     <div class="papillon" data-id="2" data-pattern="images_papillons/pattern_AGLAIS_URTICAE.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_AGLAIS_URTICAE.png" alt="Aglais urticae">
@@ -72,7 +72,6 @@
         <button class="control-btn trash">🗑️</button>
       </div>
     </div>
-    <!-- Papillon 3: Gonepteryx Rhamni -->
     <div class="papillon" data-id="3" data-pattern="images_papillons/pattern_GONEPTERYX_RHAMNI.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_GONEPTERYX_RHAMNI.png" alt="Gonepteryx rhamni">
@@ -84,7 +83,6 @@
         <button class="control-btn trash">🗑️</button>
       </div>
     </div>
-    <!-- Papillon 4: Vanessa Atalanta -->
     <div class="papillon" data-id="4" data-pattern="images_papillons/pattern_VANESSA_ATALANTA.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_VANESSA_ATALANTA.png" alt="Vanessa atalanta">
@@ -96,7 +94,6 @@
         <button class="control-btn trash">🗑️</button>
       </div>
     </div>
-    <!-- Papillon 5: Vanessa Cardui -->
     <div class="papillon" data-id="5" data-pattern="images_papillons/pattern_VANESSA_CARDUI.png">
       <div class="pap-left">
         <img class="pap-img" src="images_papillons/papillon_VANESSA_CARDUI.png" alt="Vanessa cardui">
@@ -110,7 +107,7 @@
     </div>
   </div>
   <script>
-    // Mapping des IDs numériques aux chemins des motifs
+    // mapping
     const papillonPatternMap = {
       "1": "images_papillons/pattern_AGLAIS_IO.png",
       "2": "images_papillons/pattern_AGLAIS_URTICAE.png",
@@ -119,56 +116,33 @@
       "5": "images_papillons/pattern_VANESSA_CARDUI.png"
     };
 
-    // État global
     const svg = d3.select("#svg");
     const container = document.getElementById("svgContainer");
     let selectedPapillon = null;
-    const painted = {};
-    const patternCreated = new Set();
+    const painted = {}; // painted[id] = Set of feature indices
 
-    // Crée un motif SVG pour un papillon donné
-    function ensurePattern(url, pid) {
-      if (patternCreated.has(pid)) return;
-      console.log("Création du motif pour :", url, "avec ID :", pid);
-      const defs = svg.append("defs");
-      defs.append("pattern")
-        .attr("id", pid)
-        .attr("patternUnits", "objectBoundingBox")
-        .attr("width", 1)
-        .attr("height", 1)
-        .append("image")
-        .attr("href", url)
-        .attr("width", 1)
-        .attr("height", 1)
-        .attr("preserveAspectRatio", "xMidYMid slice")
-        .on("error", function() {
-          console.error("Erreur de chargement de l'image :", url);
-        });
-      patternCreated.add(pid);
-    }
-
-    // Redessine tout le contenu SVG
+    // draw whole scene
     function draw() {
       svg.selectAll("*").remove();
       const w = container.clientWidth || 1000;
       const h = container.clientHeight || 600;
       svg.attr("viewBox", `0 0 ${w} ${h}`);
 
+      // defs placé une seule fois
+      const defs = svg.append('defs');
+
       Promise.all([
         d3.json("epci_grand-est.geojson"),
         d3.json("corps_papillon_epci.geojson")
       ]).then(([epci, corps]) => {
-        // Projection adaptée au conteneur
         const projection = d3.geoMercator();
         const path = d3.geoPath(projection);
         projection.fitSize([w, h], epci);
 
-        // Index stables pour les features
         epci.features.forEach((f, i) => f._idx = i);
 
         const g = svg.append("g");
 
-        // Dessine les zones EPCI
         const zones = g.selectAll("path.epci")
           .data(epci.features)
           .enter()
@@ -181,27 +155,28 @@
           .on("click", function(event, d) {
             if (!selectedPapillon) {
               console.log("Aucun papillon sélectionné.");
+              // petit feedback visuel
+              d3.select(this).classed('flash-red', true);
+              setTimeout(() => d3.select(this).classed('flash-red', false), 700);
               return;
             }
             const papId = String(selectedPapillon.id);
             const featNum = String(d.properties.couleur);
-            console.log("Papillon ID:", papId, "EPCI couleur:", featNum);
+            const idx = d._idx;
             if (featNum === papId) {
               painted[papId] = painted[papId] || new Set();
-              painted[papId].add(d._idx);
-              // TEST : Applique une couleur unie au lieu du motif
-              d3.select(this).attr("fill", "red");
-              console.log("Zone colorée en rouge (test)");
+              painted[papId].add(idx);
+              // applique le motif (doit exister dans defs)
+              d3.select(this).attr('fill', `url(#pattern_${papId})`);
             } else {
-              // Flash rouge si non autorisé
+              // flash rouge
               const node = d3.select(this);
               node.classed("flash-red", true);
-              setTimeout(() => node.classed("flash-red", false), 1000);
-              console.log("Zone non autorisée pour ce papillon.");
+              setTimeout(() => node.classed("flash-red", false), 800);
             }
           });
 
-        // Ajoute les labels centrés
+        // labels
         g.selectAll("text.label")
           .data(epci.features)
           .enter()
@@ -211,7 +186,7 @@
           .attr("y", d => path.centroid(d)[1])
           .text(d => d.properties.couleur);
 
-        // Ajoute la couche "corps" (non cliquable)
+        // corps non cliquable
         g.selectAll("path.corps")
           .data(corps.features)
           .enter()
@@ -222,81 +197,97 @@
           .attr("stroke", "none")
           .style("pointer-events", "none");
 
-        // Configure les contrôles des papillons
-        setupControls(zones);
+        // setup controls AFTER zones exist
+        setupControls(zones, defs);
       }).catch(err => console.error("Erreur chargement GeoJSON:", err));
     }
 
-    // Configure les boutons pour chaque papillon
-    function setupControls(zones) {
-      document.querySelectorAll(".papillon").forEach(p => {
+    // crée un pattern si besoin dans defs
+    function ensurePattern(defs, url, pid) {
+      if (defs.select(`#${pid}`).size()) return;
+      // patternUnits objectBoundingBox + image width/height = 1 fonctionne
+      const pattern = defs.append('pattern')
+        .attr('id', pid)
+        .attr('patternUnits', 'objectBoundingBox')
+        .attr('width', 1)
+        .attr('height', 1);
+
+      pattern.append('image')
+        .attr('href', url)
+        .attr('width', 1)
+        .attr('height', 1)
+        .attr('preserveAspectRatio', 'xMidYMid slice');
+    }
+
+    function setupControls(zones, defs) {
+      document.querySelectorAll('.papillon').forEach(p => {
         const id = p.dataset.id;
         const patternUrl = papillonPatternMap[id];
-        const brushBtn = p.querySelector(".brush");
-        const eyeBtn = p.querySelector(".eye");
-        const trashBtn = p.querySelector(".trash");
+        const brushBtn = p.querySelector('.brush');
+        const eyeBtn = p.querySelector('.eye');
+        const trashBtn = p.querySelector('.trash');
 
-        // Crée le motif pour ce papillon
-        ensurePattern(patternUrl, `pattern_${id}`);
+        // crée le motif dans defs
+        ensurePattern(defs, patternUrl, `pattern_${id}`);
 
-        // Sélectionne le papillon et active le pinceau
+        // click sur la carte ou image (puisque le .papillon englobe l'image)
         p.onclick = (e) => {
-          if (e.target.closest(".control-btn")) return;
-          document.querySelectorAll(".papillon").forEach(x => x.classList.remove("active"));
-          p.classList.add("active");
-          document.querySelectorAll(".control-btn.brush").forEach(b => b.classList.remove("active"));
-          brushBtn.classList.add("active");
-          selectedPapillon = { id: String(id), patternUrl: patternUrl };
-          console.log("Papillon sélectionné :", selectedPapillon);
+          if (e.target.closest('.control-btn')) return; // si on a cliqué sur un bouton
+          activatePainter(p, id, brushBtn);
         };
 
-        // Bouton pinceau
-        brushBtn.onclick = (e) => {
-          e.stopPropagation();
-          document.querySelectorAll(".papillon").forEach(x => x.classList.remove("active"));
-          p.classList.add("active");
-          document.querySelectorAll(".control-btn.brush").forEach(b => b.classList.remove("active"));
-          brushBtn.classList.add("active");
-          selectedPapillon = { id: String(id), patternUrl: patternUrl };
-          console.log("Pinceau activé pour :", selectedPapillon);
-        };
+        brushBtn.onclick = (e) => { e.stopPropagation(); activatePainter(p, id, brushBtn); };
 
-        // Bouton œil : affiche/masque les zones colorées pour ce papillon
         eyeBtn.onclick = (e) => {
           e.stopPropagation();
-          const show = !eyeBtn.classList.contains("active");
-          eyeBtn.classList.toggle("active", show);
+          const show = !eyeBtn.classList.contains('active');
+          eyeBtn.classList.toggle('active', show);
+          // pour chaque zone, si elle a été peinte pour cet id -> appliquer ou enlever le fill
           zones.each(function(d) {
             const idx = d._idx;
             const paintedSet = painted[id];
             if (paintedSet && paintedSet.has(idx)) {
               const node = d3.select(this);
-              // TEST : Applique une couleur unie au lieu du motif
-              node.attr("fill", show ? "red" : "#ffffff");
+              node.attr('fill', show ? `url(#pattern_${id})` : '#ffffff');
             }
           });
-          console.log("Visibilité basculée pour le papillon :", id);
         };
 
-        // Bouton poubelle : réinitialise les zones colorées pour ce papillon
         trashBtn.onclick = (e) => {
           e.stopPropagation();
+          // efface le jeu de zones peintes pour cet id
           painted[id] = new Set();
           zones.each(function(d) {
+            const node = d3.select(this);
+            // si propriété couleur correspond à cet id, on remet blanc
             if (String(d.properties.couleur) === String(id)) {
-              d3.select(this).attr("fill", "#ffffff");
+              node.attr('fill', '#ffffff');
+            } else {
+              // si cette zone avait été peinte par cet id (cas où on a forcé), on remet blanc
+              // (on ne peut savoir autrement que via painted set)
+              // donc on remet blanc pour toutes les occurrences indexées
             }
           });
-          eyeBtn.classList.remove("active");
-          console.log("Réinitialisation pour le papillon :", id);
+          eyeBtn.classList.remove('active');
         };
       });
     }
 
-    // Dessine la carte et gère le redimensionnement
+    function activatePainter(pElem, id, brushBtn) {
+      // active visuel
+      document.querySelectorAll('.papillon').forEach(x => x.classList.remove('active'));
+      pElem.classList.add('active');
+      document.querySelectorAll('.control-btn.brush').forEach(b => b.classList.remove('active'));
+      brushBtn.classList.add('active');
+      selectedPapillon = { id: String(id), patternUrl: papillonPatternMap[id] };
+      painted[id] = painted[id] || new Set();
+      console.log('Pinceau activé pour', selectedPapillon);
+    }
+
+    // initial draw + resize
     draw();
     let resizeTimer = null;
-    window.addEventListener("resize", () => {
+    window.addEventListener('resize', () => {
       if (resizeTimer) clearTimeout(resizeTimer);
       resizeTimer = setTimeout(draw, 250);
     });
