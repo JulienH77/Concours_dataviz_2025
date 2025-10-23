@@ -101,7 +101,7 @@
   </div>
 </div>
 
-<script>
+<!--<script>
 const svg = d3.select("#map");
 const g = svg.append("g");
 
@@ -183,7 +183,114 @@ Promise.all([
     });
   });
 });
+</script>-->
+
+
+
+
+
+
+  <script>
+const svg = d3.select("#map");
+const g = svg.append("g");
+
+const activePapillons = new Map(); // stockage des papillons actifs (clé=id, valeur=pattern URL)
+
+// Fonction de création d’un motif SVG à partir d’une image
+function createPattern(url, id) {
+  if (document.getElementById(id)) return;
+  const defs = svg.append("defs");
+  defs.append("pattern")
+    .attr("id", id)
+    .attr("patternUnits", "objectBoundingBox")
+    .attr("width", 1)
+    .attr("height", 1)
+    .append("image")
+    .attr("href", url)
+    .attr("width", 100)
+    .attr("height", 100)
+    .attr("preserveAspectRatio", "xMidYMid slice");
+}
+
+// Charger le GeoJSON principal
+Promise.all([
+  d3.json("epci_grand-est.geojson"),
+  d3.json("corps_papillon_epci.geojson")
+]).then(([epci, corps]) => {
+
+  const projection = d3.geoMercator().fitSize([window.innerWidth, window.innerHeight - 180], epci);
+  const path = d3.geoPath().projection(projection);
+
+  // Polygones des EPCI
+  const zones = g.selectAll("path.epci")
+    .data(epci.features)
+    .enter()
+    .append("path")
+    .attr("class", "epci")
+    .attr("d", path)
+    .attr("fill", "#ffffff")
+    .attr("stroke", "#333")
+    .attr("stroke-width", 0.5);
+
+  // Labels au centre
+  g.selectAll("text.label")
+    .data(epci.features)
+    .enter()
+    .append("text")
+    .attr("class", "label")
+    .attr("x", d => path.centroid(d)[0])
+    .attr("y", d => path.centroid(d)[1])
+    .text(d => d.properties.couleur);
+
+  // Couche noire semi-transparente au-dessus
+  g.selectAll("path.corps")
+    .data(corps.features)
+    .enter()
+    .append("path")
+    .attr("class", "corps")
+    .attr("d", path)
+    .attr("fill", "rgba(0,0,0,0.7)")
+    .attr("stroke", "none");
+
+  // Fonction de mise à jour de la carte
+  function updateMap() {
+    zones.transition().duration(400)
+      .attr("fill", d => {
+        // Trouve si cet EPCI correspond à un papillon actif
+        for (const [id, patternUrl] of activePapillons.entries()) {
+          if (d.properties.couleur == id) {
+            return `url(#pattern_${id})`;
+          }
+        }
+        return "#ffffff";
+      });
+  }
+
+  // Interaction avec les papillons
+  document.querySelectorAll(".papillon").forEach(el => {
+    el.addEventListener("click", () => {
+      const id = el.getAttribute("data-id");
+      const patternUrl = el.getAttribute("data-pattern");
+      const patternId = `pattern_${id}`;
+
+      // Si actif → on le désactive
+      if (activePapillons.has(id)) {
+        activePapillons.delete(id);
+        el.classList.remove("active");
+      } else {
+        // Sinon on l’active
+        activePapillons.set(id, patternUrl);
+        el.classList.add("active");
+        createPattern(patternUrl, patternId);
+      }
+
+      // Met à jour la carte
+      updateMap();
+    });
+  });
+});
 </script>
+
 </body>
 </html>
 
