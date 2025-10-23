@@ -143,14 +143,14 @@ Promise.all([
     .attr("stroke-width", 0.5);
 
   // Labels au centre
-  g.selectAll("text.label")
+  /*g.selectAll("text.label")
     .data(epci.features)
     .enter()
     .append("text")
     .attr("class", "label")
     .attr("x", d => path.centroid(d)[0])
     .attr("y", d => path.centroid(d)[1])
-    .text(d => d.properties.couleur);
+    .text(d => d.properties.couleur);*/
 
   // Couche noire semi-transparente au-dessus
   g.selectAll("path.corps")
