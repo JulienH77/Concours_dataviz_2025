@@ -4,10 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Exploration — Grand Est</title>
-
-<!-- GSAP pour les animations -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Montserrat:wght@400;600&display=swap');
 
@@ -18,12 +15,7 @@
     font-family: 'Montserrat', sans-serif;
   }
 
-  #scene {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-  }
+  #scene { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
 
   .branch {
     position: absolute;
@@ -39,52 +31,21 @@
     width: 120px;
     height: auto;
     cursor: pointer;
-    transition: transform 0.3s ease;
+    transition: transform .3s ease;
   }
-
-  .bird:hover, .butterfly:hover {
-    transform: scale(1.1);
-  }
+  .bird:hover, .butterfly:hover { transform: scale(1.1); }
 
   .tooltip {
     position: absolute;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255,255,255,0.9);
     color: #333;
     padding: 4px 8px;
     border-radius: 6px;
     font-size: 14px;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: opacity .3s;
     font-style: italic;
-  }
-
-  .buttons {
-    position: absolute;
-    bottom: 40px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    z-index: 3;
-  }
-
-  .buttons a {
-    padding: 14px 28px;
-    background: rgba(255, 255, 255, 0.85);
-    border-radius: 30px;
-    text-decoration: none;
-    color: #2e7d32;
-    font-weight: 600;
-    letter-spacing: 1px;
-    transition: all 0.3s;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-  }
-
-  .buttons a:hover {
-    background: #81c784;
-    color: white;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
   }
 
   h1 {
@@ -98,29 +59,50 @@
     text-shadow: 0 2px 8px rgba(255,255,255,0.5);
     z-index: 2;
   }
+
+  .buttons {
+    position: absolute;
+    bottom: 40px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    z-index: 3;
+  }
+  .buttons a {
+    padding: 14px 28px;
+    background: rgba(255,255,255,0.85);
+    border-radius: 30px;
+    text-decoration: none;
+    color: #2e7d32;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: all .3s;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  }
+  .buttons a:hover {
+    background: #81c784;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
 </style>
 </head>
 <body>
 <div id="scene">
   <h1>Exploration du Grand Est</h1>
 
-  <!-- Branche principale -->
   <img src="images_ui/branche.png" class="branch" alt="Branche d'arbre">
 
-  <!-- Oiseaux -->
-  <img src="images_ui/oiseau1.png" class="bird" style="left:20%; bottom:33%;" data-name="Rougegorge familier">
-  <img src="images_ui/oiseau2.png" class="bird" style="left:45%; bottom:34%;" data-name="Mésange bleue">
-  <img src="images_ui/oiseau3.png" class="bird" style="left:70%; bottom:32%;" data-name="Merle noir">
+  <img src="images_ui/oiseau1.png" class="bird" style="left:20%;bottom:33%;" data-name="Rougegorge familier">
+  <img src="images_ui/oiseau2.png" class="bird" style="left:45%;bottom:34%;" data-name="Mésange bleue">
+  <img src="images_ui/oiseau3.png" class="bird" style="left:70%;bottom:32%;" data-name="Merle noir">
 
-  <!-- Papillons -->
-  <img src="images_ui/papillon1.png" class="butterfly" style="left:10%; top:40%;" data-name="Aglais io">
-  <img src="images_ui/papillon2.png" class="butterfly" style="left:50%; top:25%;" data-name="Gonepteryx rhamni">
-  <img src="images_ui/papillon3.png" class="butterfly" style="left:80%; top:50%;" data-name="Vanessa atalanta">
+  <img src="images_ui/papillon1.png" class="butterfly" style="left:10%;top:40%;" data-name="Aglais io">
+  <img src="images_ui/papillon2.png" class="butterfly" style="left:50%;top:25%;" data-name="Gonepteryx rhamni">
+  <img src="images_ui/papillon3.png" class="butterfly" style="left:80%;top:50%;" data-name="Vanessa atalanta">
 
-  <!-- Infobulle -->
   <div class="tooltip" id="tooltip"></div>
 
-  <!-- Boutons -->
   <div class="buttons">
     <a href="index_oiseaux.html">Explorer les Oiseaux</a>
     <a href="index_papillons.html">Explorer les Papillons</a>
@@ -128,49 +110,47 @@
 </div>
 
 <script>
-  const tooltip = document.getElementById('tooltip');
+const tooltip = document.getElementById('tooltip');
 
-  // Apparition du nom au survol
-  document.querySelectorAll('.bird, .butterfly').forEach(el => {
-    el.addEventListener('mousemove', e => {
-      tooltip.textContent = el.getAttribute('data-name');
-      tooltip.style.left = (e.pageX + 10) + 'px';
-      tooltip.style.top = (e.pageY - 25) + 'px';
-      tooltip.style.opacity = 1;
-    });
-    el.addEventListener('mouseleave', () => tooltip.style.opacity = 0);
+// infobulle
+document.querySelectorAll('.bird, .butterfly').forEach(el=>{
+  el.addEventListener('mousemove',e=>{
+    tooltip.textContent=el.dataset.name;
+    tooltip.style.left=(e.pageX+10)+'px';
+    tooltip.style.top=(e.pageY-25)+'px';
+    tooltip.style.opacity=1;
   });
+  el.addEventListener('mouseleave',()=>tooltip.style.opacity=0);
+});
 
-  // Animations GSAP
-  gsap.from(".branch", { duration: 2, y: 100, opacity: 0, ease: "power2.out" });
-  gsap.from(".bird", { duration: 1.5, y: 50, opacity: 0, stagger: 0.3, ease: "back.out(1.7)" });
-  gsap.from(".butterfly", { duration: 2, opacity: 0, y: -100, stagger: 0.4, ease: "power1.out" });
+// apparitions
+gsap.from(".branch",{duration:2,y:100,opacity:0,ease:"power2.out"});
+gsap.from(".bird",{duration:1.5,y:50,opacity:0,stagger:0.3,ease:"back.out(1.7)"});
+gsap.from(".butterfly",{duration:2,opacity:0,y:-100,stagger:0.4,ease:"power1.out"});
 
-  // Animation papillons (mouvement perpétuel)
-  document.querySelectorAll(".butterfly").forEach((el, i) => {
-    const randomX = () => (Math.random() - 0.5) * 20;
-    const randomY = () => (Math.random() - 0.5) * 20;
-    gsap.to(el, {
-      x: randomX,
-      y: randomY,
-      repeat: -1,
-      yoyo: true,
-      duration: 3 + Math.random() * 2,
-      ease: "sine.inOut"
-    });
+// papillons en vol
+document.querySelectorAll(".butterfly").forEach(el=>{
+  gsap.to(el,{
+    x:()=> (Math.random()-0.5)*20,
+    y:()=> (Math.random()-0.5)*20,
+    repeat:-1,
+    yoyo:true,
+    duration:3+Math.random()*2,
+    ease:"sine.inOut"
   });
+});
 
-  // Légers balancements d’oiseaux
-  document.querySelectorAll(".bird").forEach(el => {
-    gsap.to(el, {
-      rotation: 2,
-      transformOrigin: "bottom center",
-      repeat: -1,
-      yoyo: true,
-      duration: 2 + Math.random(),
-      ease: "sine.inOut"
-    });
+// oiseaux qui se balancent
+document.querySelectorAll(".bird").forEach(el=>{
+  gsap.to(el,{
+    rotation:2,
+    transformOrigin:"bottom center",
+    repeat:-1,
+    yoyo:true,
+    duration:2+Math.random(),
+    ease:"sine.inOut"
   });
+});
 </script>
 </body>
 </html>
