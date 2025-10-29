@@ -3,73 +3,133 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Exploration — Grand Est (branche SVG)</title>
+<title>Exploration — Grand Est (branche latérale)</title>
 
 <!-- GSAP -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
 <style>
   :root{
-    --bg-top: #d9f0e0;
-    --bg-bottom: #eaf7ff;
+    --bg-top: #e9f5ee;
+    --bg-bottom: #f7fcff;
     --accent: #2e7d32;
-    --card-bg: rgba(255,255,255,0.95);
+    --card-bg: rgba(255,255,255,0.9);
   }
 
   html,body{
     height:100%;
     margin:0;
     font-family: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
-    background: linear-gradient(to top, var(--bg-bottom), var(--bg-top));
+    background: linear-gradient(to bottom, var(--bg-top), var(--bg-bottom));
+    overflow-x:hidden;
   }
 
-  /* Conteneur principal plein écran */
+  /* Conteneur principal */
   #stage{
     position:relative;
     width:100%;
-    height:100vh;          /* hauteur écran classique */
-    overflow:hidden;
-    display:block;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
   }
 
-  /* SVG de la branche en background : full width, centered vertically */
+  /* --- Branche fixée sur le côté gauche --- */
   .branch-svg{
-    position:absolute;
-    left:50%;
-    top:48%;
-    transform:translate(-50%,-48%);
-    width:1200px;          /* taille "normale d'écran pc" : tu peux ajuster */
-    max-width:140vw;       /* responsive */
+    position:fixed;
+    left:0;
+    top:50%;
+    transform:translateY(-50%);
+    width:400px;
     height:auto;
     z-index:1;
-    pointer-events:none;   /* pour que la branche n'interfère pas */
-    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.08));
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.08));
+    pointer-events:none;
   }
 
-  /* Calque pour oiseaux et papillons, au-dessus de la branche */
+  /* --- Calque des entités (mésange ici) --- */
   .entities{
-    position:absolute;
-    inset:0;
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
     z-index:2;
-    pointer-events:none; /* par défaut ; éléments eux-mêmes ont pointer-events:auto */
   }
 
-  /* Oiseaux et papillons (images PNG) */
-  .entity {
+  .entity{
     position:absolute;
     width:120px;
     height:auto;
-    transform-origin: center bottom;
     cursor:pointer;
-    pointer-events:auto; /* permet survol/clic */
-    transition: transform .18s ease;
+    pointer-events:auto;
     user-select:none;
+    transition:transform .2s ease;
   }
-  .entity:hover { transform: scale(1.08); z-index:3; }
+  .entity:hover { transform: scale(1.08); }
 
-  /* Infobulle */
+  /* Mésange : posée sur la branche */
+  #bird2{
+    left:210px; /* Ajuste selon ton SVG (valeurs à peaufiner) */
+    top:53%;    /* légèrement au-dessus du centre */
+    transform:translateY(-50%);
+  }
+
+  /* Titre */
+  header{
+    z-index:10;
+    margin-bottom:40px;
+  }
+  header h1{
+    margin:0;
+    font-family: "Playfair Display", serif;
+    color: var(--accent);
+    font-size:36px;
+    letter-spacing:1px;
+    text-shadow: 0 2px 8px rgba(255,255,255,0.8);
+  }
+
+  /* Texte d'accueil */
+  .intro{
+    max-width:600px;
+    font-size:18px;
+    line-height:1.6;
+    color:#234;
+    margin:0 auto 60px auto;
+    background:var(--card-bg);
+    padding:20px 28px;
+    border-radius:16px;
+    box-shadow:0 6px 20px rgba(0,0,0,0.1);
+  }
+
+  /* Boutons revisités */
+  .cta{
+    display:flex;
+    gap:20px;
+    z-index:20;
+  }
+  .cta a{
+    display:inline-block;
+    padding:14px 26px;
+    border-radius:32px;
+    text-decoration:none;
+    background:var(--accent);
+    color:white;
+    font-weight:600;
+    font-size:16px;
+    box-shadow:0 6px 18px rgba(46,125,50,0.3);
+    transition: all .2s ease;
+  }
+  .cta a:hover{
+    background:#3aa34a;
+    transform:translateY(-3px);
+    box-shadow:0 10px 20px rgba(46,125,50,0.3);
+  }
+
+  /* Tooltip (optionnel si tu veux le garder) */
   .tooltip{
     position:fixed;
     left:0;
@@ -89,146 +149,76 @@
     white-space:nowrap;
   }
 
-  /* Header titre */
-  header{
-    position:absolute;
-    top:26px;
-    width:100%;
-    text-align:center;
-    z-index:20;
-  }
-  header h1{
-    margin:0;
-    font-family: "Playfair Display", serif;
-    color: var(--accent);
-    font-size:28px;
-    letter-spacing:1px;
-    text-shadow: 0 2px 8px rgba(255,255,255,0.6);
-  }
-
-  /* Boutons bas */
-  .cta {
-    position:absolute;
-    bottom:28px;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:40;
-    display:flex;
-    gap:18px;
-  }
-  .cta a {
-    display:inline-block;
-    padding:12px 22px;
-    border-radius:28px;
-    text-decoration:none;
-    background:var(--card-bg);
-    color:var(--accent);
-    font-weight:600;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-    transition: transform .18s ease, background .18s;
-  }
-  .cta a:hover { transform: translateY(-4px); background: #e6fff0; }
-
-  /* Responsive adjustments */
-  @media (max-width:1000px){
-    .entity{ width:90px; }
-    .branch-svg { width:1000px; }
-    header h1 { font-size:22px; }
-  }
-
-  @media (max-width:600px){
-    .entity{ width:70px; }
-    .branch-svg { width:780px; top:44%; }
-    .cta a { padding:10px 14px; font-size:14px; }
+  /* Responsive */
+  @media (max-width:900px){
+    .branch-svg{ width:260px; opacity:0.9; }
+    header h1{ font-size:26px; }
+    .intro{ font-size:16px; }
   }
 </style>
 </head>
 <body>
+
 <div id="stage">
 
-  <!-- Titre -->
-  <header><h1>Exploration du Grand Est — Nature</h1></header>
+  <header>
+    <h1>Exploration du Grand Est — Nature</h1>
+  </header>
 
-  <!-- Branche SVG vectorielle (inline) : stylisée, facilement modifiable -->
+  <p class="intro">
+    Découvrez la faune emblématique du Grand Est à travers une expérience interactive et poétique.  
+    Observez les oiseaux, les papillons, et d’autres merveilles naturelles qui peuplent nos forêts et jardins.
+  </p>
+
+  <div class="cta">
+    <a href="index_oiseaux.html">🕊️ Explorer les Oiseaux</a>
+    <a href="index_papillons.html">🦋 Explorer les Papillons</a>
+  </div>
+
+  <!-- Branche SVG latérale -->
   <svg class="branch-svg" viewBox="0 0 1400 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <!-- simple branche courbe vectorielle avec quelques feuilles -->
     <defs>
       <linearGradient id="woodGrad" x1="0" x2="1">
         <stop offset="0" stop-color="#7b5a35"/>
         <stop offset="1" stop-color="#9b6f3f"/>
       </linearGradient>
       <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#000" flood-opacity="0.06"/>
+        <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.06"/>
       </filter>
     </defs>
 
     <g filter="url(#soft)">
-      <!-- branche principale -->
-      <path d="M20 280 C200 230, 350 230, 520 260
-               C700 290, 820 240, 980 230
-               C1140 220, 1280 260, 1370 240" fill="none" stroke="url(#woodGrad)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Branche (courbée vers l’intérieur de la page) -->
+      <path d="M0 300 C200 280, 400 200, 600 180 C800 160, 1000 240, 1200 260" 
+            fill="none" stroke="url(#woodGrad)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
 
-      <!-- petites ramifications -->
-      <path d="M360 260 C390 240, 420 220, 470 240" fill="none" stroke="url(#woodGrad)" stroke-width="16" stroke-linecap="round"/>
-      <path d="M760 260 C780 240, 820 220, 880 240" fill="none" stroke="url(#woodGrad)" stroke-width="14" stroke-linecap="round"/>
-
-      <!-- feuilles (exemples) -->
-      <g transform="translate(430,210) rotate(-12)">
+      <!-- Feuilles -->
+      <g transform="translate(280,220) rotate(-12)">
         <ellipse rx="28" ry="14" fill="#79a88e" stroke="#3f6b4f" stroke-width="3"/>
       </g>
-      <g transform="translate(500,235) rotate(-35)">
+      <g transform="translate(520,190) rotate(-35)">
         <ellipse rx="26" ry="12" fill="#8cc08f" stroke="#3f6b4f" stroke-width="3"/>
       </g>
-      <g transform="translate(820,220) rotate(10)">
+      <g transform="translate(850,210) rotate(10)">
         <ellipse rx="30" ry="15" fill="#7fb986" stroke="#3f6b4f" stroke-width="3"/>
-      </g>
-      <g transform="translate(970,210) rotate(30)">
-        <ellipse rx="22" ry="11" fill="#88c195" stroke="#3f6b4f" stroke-width="3"/>
-      </g>
-
-      <!-- petite texture d'écorce -->
-      <g stroke="#6b4f32" stroke-width="2" stroke-linecap="round" opacity="0.5">
-        <path d="M120 268 q30 -10 60 -6" />
-        <path d="M460 250 q22 -6 44 -2" />
-        <path d="M840 248 q18 -5 36 -3" />
       </g>
     </g>
   </svg>
 
-  <!-- calque où on place les images d'oiseaux/papillons -->
+  <!-- Mésange bleue -->
   <div class="entities">
-
-    <!-- Oiseaux — utilise les images existantes dans ton dépôt -->
-    <!-- Positionne par rapport à la largeur/hauteur : ajuster left/bottom pour placer exactement sur la branche -->
-    <img src="images_ui/oiseau1.png" class="entity bird" id="bird1" style="left:18%; bottom:40%;" data-name="Rougegorge familier">
-    <img src="IMG/mesange_bleu.png" class="entity bird" id="bird2" style="left:42%; bottom:42%;" data-name="Mésange bleue">
-    <img src="images_ui/oiseau3.png" class="entity bird" id="bird3" style="left:66%; bottom:40%;" data-name="Merle noir">
-
-    <!-- Papillons (optionnel si tu veux) -->
-    <img src="images_ui/papillon1.png" class="entity butterfly" id="but1" style="left:8%; top:36%;" data-name="Aglais io">
-    <img src="images_ui/papillon2.png" class="entity butterfly" id="but2" style="left:52%; top:22%;" data-name="Gonepteryx rhamni">
-    <img src="images_ui/papillon3.png" class="entity butterfly" id="but3" style="left:84%; top:46%;" data-name="Vanessa atalanta">
-
+    <img src="IMG/mesange_bleu.png" class="entity" id="bird2" data-name="Mésange bleue">
   </div>
 
-  <!-- tooltip -->
+  <!-- Tooltip -->
   <div class="tooltip" id="tooltip" aria-hidden="true"></div>
-
-  <!-- boutons -->
-  <div class="cta" role="navigation" aria-label="Aller aux pages">
-    <a href="index_oiseaux.html">Explorer les Oiseaux</a>
-    <a href="index_papillons.html">Explorer les Papillons</a>
-  </div>
 
 </div>
 
 <script>
-  // tooltip management
   const tooltip = document.getElementById('tooltip');
-
   function showTooltip(e, text){
     tooltip.textContent = text;
-    // position near cursor but not outside viewport
     const x = Math.min(window.innerWidth - 80, Math.max(60, e.clientX + 10));
     const y = Math.max(36, e.clientY - 18);
     tooltip.style.left = x + 'px';
@@ -236,65 +226,17 @@
     tooltip.style.opacity = 1;
     tooltip.style.transform = 'translate(-50%,-100%)';
   }
-  function hideTooltip(){
-    tooltip.style.opacity = 0;
-  }
+  function hideTooltip(){ tooltip.style.opacity = 0; }
 
-  // Add hover handlers to all entities
   document.querySelectorAll('.entity').forEach(el=>{
-    el.addEventListener('mousemove', (e)=>{
-      showTooltip(e, el.dataset.name || '');
-    });
+    el.addEventListener('mousemove', (e)=> showTooltip(e, el.dataset.name || ''));
     el.addEventListener('mouseleave', hideTooltip);
   });
 
-  // GSAP animations : entrée + idle movements
-  gsap.from('.branch-svg', {duration: 0.9, y: 60, opacity:0, ease: "power2.out"});
-  gsap.from('.entity', {duration: 1, y: 30, opacity:0, stagger: 0.12, ease: "back.out(1.6)"});
-
-  // léger balancement pour oiseaux (réglage individuel)
-  gsap.utils.toArray('.bird').forEach((b, i) => {
-    gsap.to(b, {
-      rotation: (i % 2 === 0) ? 3 : -3,
-      transformOrigin: "50% 100%",
-      yoyo: true, repeat: -1,
-      duration: 2.4 + Math.random(),
-      ease: "sine.inOut"
-    });
-  });
-
-  // mouvements papillons (small flight)
-  gsap.utils.toArray('.butterfly').forEach((but, i) => {
-    const range = 28 + Math.random() * 36;
-    gsap.to(but, {
-      x: `+=${(Math.random()>.5?1:-1) * range}`,
-      y: `+=${(Math.random()>.5?1:-1) * (range/2)}`,
-      rotation: (Math.random()-0.5)*10,
-      duration: 3 + Math.random()*2.5,
-      yoyo:true, repeat:-1, ease: "sine.inOut"
-    });
-  });
-
-  // Optionnel : léger parallax en fonction de la position de la souris (donne de la profondeur)
-  const stage = document.getElementById('stage');
-  stage.addEventListener('mousemove', (ev)=>{
-    const cx = ev.clientX - window.innerWidth/2;
-    const cy = ev.clientY - window.innerHeight/2;
-    // translate branch subtly
-    gsap.to('.branch-svg', {duration:0.6, x: cx*0.02, y: cy*0.01, ease: "power1.out"});
-    // subtle parallax on entities (inverse)
-    gsap.to('.entities', {duration:0.6, x: -cx*0.01, y: -cy*0.005, ease:"power1.out"});
-  });
-
-  // Accessibility: hide tooltip for keyboard focus (optional enhancement)
-  document.querySelectorAll('.entity').forEach(el=>{
-    el.setAttribute('tabindex','0');
-    el.addEventListener('focus', (e)=> showTooltip(e, el.dataset.name || ''));
-    el.addEventListener('blur', hideTooltip);
-  });
-
-  // NOTE : ajuste les styles left/bottom/top pour placer précisément les oiseaux sur ta branche SVG.
-  // Si tu veux, je peux te fournir les valeurs précises pour une position parfaite sur desktop.
+  // Animation d'apparition
+  gsap.from('.branch-svg', {duration: 1, x: -60, opacity:0, ease: "power2.out"});
+  gsap.from('#bird2', {duration: 1, y: 30, opacity:0, ease:"back.out(1.6)"});
 </script>
+
 </body>
 </html>
