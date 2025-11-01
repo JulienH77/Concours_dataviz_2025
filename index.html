@@ -137,20 +137,20 @@
 <div class="split">
   <!-- Colonne Oiseaux -->
   <div class="side birds">
-    <h1>🕊️ Oiseaux du Grand Est</h1>
+    <h1>Oiseaux du Grand Est</h1>
     <a href="index_oiseaux.html" class="cta-big">Explorer les Oiseaux</a>
   </div>
 
   <!-- Colonne Papillons -->
   <div class="side butterflies">
-    <h1>🦋 Papillons du Grand Est</h1>
+    <h1>Papillons du Grand Est</h1>
     <a href="index_papillons.html" class="cta-big">Explorer les Papillons</a>
-    <button class="cta-small" id="showMapBtn">📍 Voir la carte</button>
+    <button class="cta-small" id="showMapBtn">Voir la carte</button>
   </div>
 </div>
 
 <!-- Image de la carte -->
-<img id="map" src="IMG/carte_papillons.png" alt="Carte des papillons du Grand Est">
+<img id="map" src="carte papillon.jpeg" alt="Carte des papillons du Grand Est">
 
 <script>
   const map = document.getElementById('map');
@@ -159,10 +159,10 @@
   btn.addEventListener('click', ()=>{
     if(map.style.display === 'none'){
       map.style.display = 'block';
-      btn.textContent = '❌ Fermer la carte';
+      btn.textContent = 'Fermer la carte';
     } else {
       map.style.display = 'none';
-      btn.textContent = '📍 Voir la carte';
+      btn.textContent = 'Voir la carte';
     }
   });
 </script>
