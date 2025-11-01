@@ -3,239 +3,168 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Exploration — Grand Est (branche latérale)</title>
-
-<!-- GSAP -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<title>Exploration — Grand Est</title>
 
 <style>
   :root{
-    --bg-top: #e9f5ee;
-    --bg-bottom: #f7fcff;
-    --accent: #2e7d32;
-    --card-bg: rgba(255,255,255,0.9);
+    --accent-bird: #2e7d32;
+    --accent-butterfly: #b94fb9;
+    --bg-bird: #e9f5ee;
+    --bg-butterfly: #fdf3fa;
   }
 
   html,body{
-    height:100%;
     margin:0;
-    font-family: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    background: linear-gradient(to bottom, var(--bg-top), var(--bg-bottom));
-    overflow-x:hidden;
+    padding:0;
+    height:100%;
+    font-family: "Montserrat", system-ui, sans-serif;
+    overflow:hidden;
   }
 
-  /* Conteneur principal */
-  #stage{
-    position:relative;
+  /* --- Conteneur global en deux colonnes --- */
+  .split{
+    display:flex;
+    height:100vh;
     width:100%;
-    min-height:100vh;
+  }
+
+  .side{
+    flex:1;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    text-align:center;
-  }
-
-  /* --- Branche fixée sur le côté gauche --- */
-  .branch-svg{
-    position:fixed;
-    left:0;
-    top:50%;
-    transform:translateY(-50%);
-    width:400px;
-    height:auto;
-    z-index:1;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.08));
-    pointer-events:none;
-  }
-
-  /* --- Calque des entités (mésange ici) --- */
-  .entities{
-    position:fixed;
-    left:0;
-    top:0;
-    width:100%;
-    height:100%;
-    pointer-events:none;
-    z-index:2;
-  }
-
-  .entity{
-    position:absolute;
-    width:120px;
-    height:auto;
-    cursor:pointer;
-    pointer-events:auto;
-    user-select:none;
-    transition:transform .2s ease;
-  }
-  .entity:hover { transform: scale(1.08); }
-
-  /* Mésange : posée sur la branche */
-  #bird2{
-    left:13%; /* Ajuste selon ton SVG (valeurs à peaufiner) */
-    top:40%;    /* légèrement au-dessus du centre */
-    transform:translateY(-50%);
-  }
-
-  /* Titre */
-  header{
-    z-index:10;
-    margin-bottom:40px;
-  }
-  header h1{
-    margin:0;
-    font-family: "Playfair Display", serif;
-    color: var(--accent);
-    font-size:36px;
-    letter-spacing:1px;
-    text-shadow: 0 2px 8px rgba(255,255,255,0.8);
-  }
-
-  /* Texte d'accueil */
-  .intro{
-    max-width:600px;
-    font-size:18px;
-    line-height:1.6;
     color:#234;
-    margin:0 auto 60px auto;
-    background:var(--card-bg);
-    padding:20px 28px;
-    border-radius:16px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.1);
+    position:relative;
+    transition: flex 0.5s ease;
+    overflow:hidden;
   }
 
-  /* Boutons revisités */
-  .cta{
-    display:flex;
-    gap:20px;
-    z-index:20;
+  .side:hover{
+    flex:1.2;
   }
-  .cta a{
-    display:inline-block;
-    padding:14px 26px;
-    border-radius:32px;
-    text-decoration:none;
-    background:var(--accent);
-    color:white;
+
+  /* --- Oiseaux --- */
+  .birds{
+    background:linear-gradient(to bottom, var(--bg-bird), #f7fcff);
+  }
+
+  /* --- Papillons --- */
+  .butterflies{
+    background:linear-gradient(to bottom, var(--bg-butterfly), #fff);
+  }
+
+  /* --- Titre principal --- */
+  h1{
+    font-family: "Playfair Display", serif;
+    font-size:40px;
+    color:inherit;
+    margin-bottom:30px;
+  }
+
+  /* --- Bouton principal --- */
+  .cta-big{
+    padding:20px 36px;
+    border-radius:40px;
+    font-size:20px;
     font-weight:600;
-    font-size:16px;
-    box-shadow:0 6px 18px rgba(46,125,50,0.3);
+    text-decoration:none;
+    color:white;
     transition: all .2s ease;
+    box-shadow:0 8px 24px rgba(0,0,0,0.2);
   }
-  .cta a:hover{
+
+  .birds .cta-big{
+    background: var(--accent-bird);
+  }
+  .birds .cta-big:hover{
     background:#3aa34a;
-    transform:translateY(-3px);
-    box-shadow:0 10px 20px rgba(46,125,50,0.3);
   }
 
-  /* Tooltip (optionnel si tu veux le garder) */
-  .tooltip{
+  .butterflies .cta-big{
+    background: var(--accent-butterfly);
+  }
+  .butterflies .cta-big:hover{
+    background:#d665d6;
+  }
+
+  /* --- Bouton secondaire (petite carte) --- */
+  .cta-small{
+    margin-top:18px;
+    background:rgba(255,255,255,0.8);
+    color:#333;
+    font-size:16px;
+    padding:10px 18px;
+    border-radius:30px;
+    border:2px solid rgba(0,0,0,0.1);
+    cursor:pointer;
+    transition:all .2s ease;
+  }
+  .cta-small:hover{
+    background:white;
+    transform:translateY(-2px);
+  }
+
+  /* --- Image carte (affichée via JS) --- */
+  #map{
     position:fixed;
-    left:0;
-    top:0;
-    transform: translate(-50%,-100%);
-    background: var(--card-bg);
-    color:#123;
-    padding:6px 10px;
-    border-radius:8px;
-    font-size:14px;
-    font-style:italic;
-    box-shadow:0 8px 20px rgba(0,0,0,0.12);
-    pointer-events:none;
-    opacity:0;
-    transition: opacity .18s, transform .18s;
+    bottom:20px;
+    right:20px;
+    max-width:400px;
+    border-radius:12px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.25);
+    display:none;
     z-index:50;
-    white-space:nowrap;
   }
 
-  /* Responsive */
-  @media (max-width:900px){
-    .branch-svg{ width:260px; opacity:0.9; }
-    header h1{ font-size:26px; }
-    .intro{ font-size:16px; }
+  /* --- Responsive --- */
+  @media(max-width:900px){
+    .split{
+      flex-direction:column;
+    }
+    h1{
+      font-size:28px;
+    }
+    .cta-big{
+      font-size:18px;
+      padding:16px 30px;
+    }
   }
 </style>
 </head>
 <body>
 
-<div id="stage">
-
-  <header>
-    <h1>Exploration du Grand Est — Nature</h1>
-  </header>
-
-  <p class="intro">
-    Découvrez la faune emblématique du Grand Est à travers une expérience interactive et poétique.  
-    Observez les oiseaux, les papillons, et d’autres merveilles naturelles qui peuplent nos forêts et jardins.
-  </p>
-
-  <div class="cta">
-    <a href="index_oiseaux.html">🕊️ Explorer les Oiseaux</a>
-    <a href="index_papillons.html">🦋 Explorer les Papillons</a>
+<div class="split">
+  <!-- Colonne Oiseaux -->
+  <div class="side birds">
+    <h1>🕊️ Oiseaux du Grand Est</h1>
+    <a href="index_oiseaux.html" class="cta-big">Explorer les Oiseaux</a>
   </div>
 
-  <!-- Branche SVG latérale -->
-  <svg class="branch-svg" viewBox="0 0 1400 400" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <defs>
-      <linearGradient id="woodGrad" x1="0" x2="1">
-        <stop offset="0" stop-color="#7b5a35"/>
-        <stop offset="1" stop-color="#9b6f3f"/>
-      </linearGradient>
-      <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.06"/>
-      </filter>
-    </defs>
-
-    <g filter="url(#soft)">
-      <!-- Branche (courbée vers l’intérieur de la page) -->
-      <path d="M0 300 C200 280, 400 200, 600 180 C800 160, 1000 240, 1200 260" 
-            fill="none" stroke="url(#woodGrad)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
-
-      <!-- Feuilles -->
-      <g transform="translate(280,220) rotate(-12)">
-        <ellipse rx="28" ry="14" fill="#79a88e" stroke="#3f6b4f" stroke-width="3"/>
-      </g>
-      <g transform="translate(520,190) rotate(-35)">
-        <ellipse rx="26" ry="12" fill="#8cc08f" stroke="#3f6b4f" stroke-width="3"/>
-      </g>
-      <g transform="translate(850,210) rotate(10)">
-        <ellipse rx="30" ry="15" fill="#7fb986" stroke="#3f6b4f" stroke-width="3"/>
-      </g>
-    </g>
-  </svg>
-
-  <!-- Mésange bleue -->
-  <div class="entities">
-    <img src="IMG/mesange_bleu.png" class="entity" id="bird2" data-name="Mésange bleue">
+  <!-- Colonne Papillons -->
+  <div class="side butterflies">
+    <h1>🦋 Papillons du Grand Est</h1>
+    <a href="index_papillons.html" class="cta-big">Explorer les Papillons</a>
+    <button class="cta-small" id="showMapBtn">📍 Voir la carte</button>
   </div>
-
-  <!-- Tooltip -->
-  <div class="tooltip" id="tooltip" aria-hidden="true"></div>
-
 </div>
 
+<!-- Image de la carte -->
+<img id="map" src="IMG/carte_papillons.png" alt="Carte des papillons du Grand Est">
+
 <script>
-  const tooltip = document.getElementById('tooltip');
-  function showTooltip(e, text){
-    tooltip.textContent = text;
-    const x = Math.min(window.innerWidth - 80, Math.max(60, e.clientX + 10));
-    const y = Math.max(36, e.clientY - 18);
-    tooltip.style.left = x + 'px';
-    tooltip.style.top = y + 'px';
-    tooltip.style.opacity = 1;
-    tooltip.style.transform = 'translate(-50%,-100%)';
-  }
-  function hideTooltip(){ tooltip.style.opacity = 0; }
+  const map = document.getElementById('map');
+  const btn = document.getElementById('showMapBtn');
 
-  document.querySelectorAll('.entity').forEach(el=>{
-    el.addEventListener('mousemove', (e)=> showTooltip(e, el.dataset.name || ''));
-    el.addEventListener('mouseleave', hideTooltip);
+  btn.addEventListener('click', ()=>{
+    if(map.style.display === 'none'){
+      map.style.display = 'block';
+      btn.textContent = '❌ Fermer la carte';
+    } else {
+      map.style.display = 'none';
+      btn.textContent = '📍 Voir la carte';
+    }
   });
-
-  // Animation d'apparition
-  gsap.from('.branch-svg', {duration: 1, x: -60, opacity:0, ease: "power2.out"});
-  gsap.from('#bird2', {duration: 1, y: 30, opacity:0, ease:"back.out(1.6)"});
 </script>
 
 </body>
